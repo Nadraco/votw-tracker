@@ -1,6 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDxSKU85aMBBL6jNvHiaihnWA-vApp-dVk",
+      authDomain: "votw-tracker.firebaseapp.com",
+      projectId: "votw-tracker",
+      storageBucket: "votw-tracker.firebasestorage.app",
+      messagingSenderId: "554314433668",
+      appId: "1:554314433668:web:9818e708d793dcfad2eed1"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>VOTW Tracker</title>
@@ -195,6 +211,23 @@
         <div class="tab" onclick="switchTab('failed')">Failed</div>
       </div>
       <ul class="quest-list" id="quest-list"></ul>
+<button onclick="showAddQuestForm()" style="margin-top: 20px; width: 100%; padding: 10px; background: #4e2d3a; color: white; border: none; border-radius: 4px; cursor: pointer;">➕ Add Quest</button>
+<div id="add-quest-form" style="display:none; margin-top: 10px;">
+  <input type="text" id="quest-title" placeholder="Title" style="width:100%; margin-bottom: 5px;" />
+  <input type="text" id="quest-lead" placeholder="Lead" style="width:100%; margin-bottom: 5px;" />
+  <input type="text" id="quest-giver" placeholder="Giver" style="width:100%; margin-bottom: 5px;" />
+  <input type="text" id="quest-type" placeholder="Type (Personal/Party)" style="width:100%; margin-bottom: 5px;" />
+  <input type="text" id="quest-location" placeholder="Location" style="width:100%; margin-bottom: 5px;" />
+  <input type="text" id="quest-time" placeholder="Time Remaining" style="width:100%; margin-bottom: 5px;" />
+  <input type="text" id="quest-notes" placeholder="Notes" style="width:100%; margin-bottom: 5px;" />
+  <input type="text" id="quest-reward" placeholder="Reward" style="width:100%; margin-bottom: 5px;" />
+  <select id="quest-priority" style="width:100%; margin-bottom: 5px;">
+    <option value="low">Low</option>
+    <option value="medium">Medium</option>
+    <option value="high">High</option>
+  </select>
+  <button onclick="addQuest()" style="width: 100%; padding: 8px; background: gold; color: black; font-weight: bold; border: none; border-radius: 4px;">Add</button>
+</div>
     </div>
     <div class="main" id="quest-details">
       <div class="quest-title">Select a quest</div>
@@ -209,69 +242,17 @@
       </div>
     </div>
 <script>
-const questData = {
-  active: [
-    {
-      title: "Quinn's Debt",
-      lead: "Gather Funds",
-      giver: "Quinn Kellar",
-      type: "Personal",
-      location: "-",
-      time: "-",
-      notes: "Quinn owes the Black Tide 15,000gp after crashing The Eel's Keelboat, losing tons of contraband.<br><br>Encountered Vivienne Sable who said it's not about the money, it's about the principle. She caught The Wayfinders escaping Fortunis Cay.",
-      priority: "high",
-      reward: "-"
-    },
-    {
-      title: "Gather Artifacts",
-      lead: "Find a Lead on an Artifact.",
-      giver: "Alexios of Arran",
-      type: "Party",
-      location: "-",
-      time: "2 Weeks",
-      notes: "As the benefactor of The Wayfinders, they must find artifacts for Alexios in return for use of his ship.",
-      priority: "high",
-      reward: "-"
-    },
-    {
-      title: "Recruit Miri Roux",
-      lead: "Pick Up on Return.",
-      giver: "Miri Roux",
-      type: "Party",
-      location: "Thornemere",
-      time: "-",
-      notes: "Miri Roux promised she'd be ready to join The Wayfinders by the time they come back to Thornemere.",
-      priority: "low",
-      reward: "A Magical Ink Carver"
+const questData = { active: [], completed: [], failed: [] };
+
+db.collection("quests").get().then(snapshot => {
+  snapshot.forEach(doc => {
+    const quest = doc.data();
+    if (quest.status && questData[quest.status]) {
+      questData[quest.status].push(quest);
     }
-  ],
-  completed: [
-    {
-      title: "Revive Gideon Ghostshroud",
-      lead: "Find the House of the Nine.",
-      giver: "The Wayfinders",
-      type: "Party",
-      location: "West Eldenreach, Shattered Isles",
-      time: "10 Days",
-      notes: "Find a way to revive Gideon.",
-      priority: "high",
-      reward: "-"
-    }
-  ],
-  failed: [
-    {
-      title: "Revive Ignatius of Pyraea",
-      lead: "Find the House of the Nine.",
-      giver: "The Wayfinders",
-      type: "World",
-      location: "West Eldenreach, Shattered Isles",
-      time: "Expired",
-      notes: "Found a way to revive Ignatius but failed Oghma's trial to resurrect him.",
-      priority: "medium",
-      reward: "-"
-    }
-  ]
-};
+  });
+  renderQuests();
+});
 function renderQuests() {
   const list = document.getElementById('quest-list');
   list.innerHTML = '';
@@ -328,6 +309,31 @@ function switchTab(tabName) {
 }
 
 let currentTab = 'active';
+function showAddQuestForm() {
+  const form = document.getElementById('add-quest-form');
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+function addQuest() {
+  const newQuest = {
+    title: document.getElementById('quest-title').value,
+    lead: document.getElementById('quest-lead').value,
+    giver: document.getElementById('quest-giver').value,
+    type: document.getElementById('quest-type').value,
+    location: document.getElementById('quest-location').value,
+    time: document.getElementById('quest-time').value,
+    notes: document.getElementById('quest-notes').value,
+    reward: document.getElementById('quest-reward').value,
+    priority: document.getElementById('quest-priority').value,
+    status: 'active'
+  };
+
+  db.collection("quests").add(newQuest).then(() => {
+    alert("Quest added!");
+    location.reload();
+  });
+}
+
 window.onload = renderQuests;
 </script>
 
@@ -338,7 +344,7 @@ window.onload = renderQuests;
   <div class="content" id="npc-library" style="display:none; flex-direction: column;">
     <div class="npc-tabs">
       <button class="active" onclick="showNpcSection('thornemere', this)">Thornemere</button>
-      <button onclick="showNpcSection('shattered-isles', this)">Shattered Isles</button>
+      <button onclick="showNpcSection('west-eldenreach', this)">West Eldenreach</button>
     </div>
     <div class="npc-search">
       <input type="text" placeholder="Search NPCs..." onkeyup="filterNPCs(this.value)">
@@ -347,25 +353,17 @@ window.onload = renderQuests;
       <h2>Thornemere</h2>
       <div class="npc-tile-container">
         <div class="npc-card">
-          <img src="Miri Roux.png" alt="Miri Roux">
+          <img src="npc1.jpg" alt="Miri Roux">
           <span class="npc-name">Miri Roux</span>
-        </div>
-		<div class="npc-card">
-          <img src="Anathea Dusksense.png" alt="Anathea Dusksense">
-          <span class="npc-name">Anathea Dusksense</span>
         </div>
       </div>
     </div>
-    <div id="shattered-isles" class="npc-section" style="display: none;">
-      <h2>Shattered Isles</h2>
+    <div id="west-eldenreach" class="npc-section" style="display: none;">
+      <h2>West Eldenreach</h2>
       <div class="npc-tile-container">
         <div class="npc-card">
-          <img src="Diana Daerith.png" alt="Diana Daerith">
-          <span class="npc-name">Diana Daerith</span>
-        </div>
-		<div class="npc-card">
-          <img src="The Keeper of the First Light.png" alt="Keeper of the First Light">
-          <span class="npc-name">Keeper of the First Light</span>
+          <img src="npc2.jpg" alt="Gideon Ghostshroud">
+          <span class="npc-name">Gideon Ghostshroud</span>
         </div>
       </div>
     </div>
