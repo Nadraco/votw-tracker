@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quest Tracker</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom, #2e1a32, #2e1e23);
+      color: #fff;
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 300px;
+      background-color: #2b162a;
+      border-right: 2px solid #5c3b4e;
+      padding: 20px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      padding: 6px 12px;
+      background: #3e2337;
+      color: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      background: gold;
+      color: #000;
+      font-weight: bold;
+    }
+
+    .quest-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .quest-list li {
+      padding: 8px 12px;
+      margin-bottom: 6px;
+      background: #1f0f1a;
+      border-left: 5px solid transparent;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .quest-list li.high { border-left: 5px solid red; }
+    .quest-list li.medium { border-left: 5px solid orange; }
+    .quest-list li.low { border-left: 5px solid yellow; }
+
+    .quest-list li.active {
+      background: #2a1120;
+      font-weight: bold;
+    }
+
+    .main {
+      flex: 1;
+      padding: 30px;
+    }
+
+    .quest-title {
+      font-size: 24px;
+      font-weight: bold;
+      color: gold;
+      margin-bottom: 20px;
+    }
+
+    .quest-lead, .quest-meta {
+      color: #d2c6ca;
+      margin-bottom: 10px;
+    }
+
+    .quest-meta div {
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('active')">Active</div>
+      <div class="tab" onclick="switchTab('completed')">Completed</div>
+      <div class="tab" onclick="switchTab('failed')">Failed</div>
+    </div>
+
+    <ul class="quest-list" id="quest-list">
+      <!-- Quests will be populated here -->
+    </ul>
+  </div>
+
+  <div class="main" id="quest-details">
+    <div class="quest-title">Select a quest</div>
+    <div class="quest-lead">Quest details will appear here.</div>
+    <div class="quest-meta">
+      <div><strong>Giver:</strong> </div>
+      <div><strong>Type:</strong> </div>
+      <div><strong>Location:</strong> </div>
+      <div><strong>Time Remaining:</strong> </div>
+      <div><strong>Notes:</strong> </div>
+      <div><strong>Reward:</strong> </div>
+    </div>
+  </div>
+
+  <script>
+    const questData = {
+      active: [
+        {
+          title: "Quinn's Debt",
+          lead: "Gather Funds",
+          giver: "Quinn Kellar",
+          type: "Personal",
+          location: "-",
+          time: "-",
+          notes: "Quinn owes the Black Tide 15,000gp after crashing The Eel's Keelboat, losing tons of contraband.<br><br>Encountered Vivienne Sable who said it's not about the money, it's about the principle. She caught The Wayfinders escaping Fortunis Cay.",
+          priority: "high",
+          reward: "-"
+        },
+        {
+          title: "Gather Artifacts",
+          lead: "Find a Lead on an Artifact.",
+          giver: "Alexios of Arran",
+          type: "Party",
+          location: "-",
+          time: "2 Weeks",
+          notes: "As the benefactor of The Wayfinders, they must find artifacts for Alexios in return for use of his ship.",
+          priority: "high",
+          reward: "-"
+        },
+        {
+          title: "Recruit Miri Roux",
+          lead: "Pick Up on Return.",
+          giver: "Miri Roux",
+          type: "Party",
+          location: "Thornemere",
+          time: "-",
+          notes: "Miri Roux promised she'd be ready to join The Wayfinders by the time they come back to Thornemere.",
+          priority: "low",
+          reward: "A Magical Ink Carver"
+        }
+      ],
+      completed: [
+        {
+          title: "Revive Gideon Ghostshroud",
+          lead: "Find the House of the Nine.",
+          giver: "The Wayfinders",
+          type: "Party",
+          location: "West Eldenreach, Shattered Isles",
+          time: "10 Days",
+          notes: "Find a way to revive Gideon.",
+          priority: "high",
+          reward: "-"
+        }
+      ],
+      failed: [
+        {
+          title: "Revive Ignatius of Pyraea",
+          lead: "Find the House of the Nine.",
+          giver: "The Wayfinders",
+          type: "World",
+          location: "West Eldenreach, Shattered Isles",
+          time: "Expired",
+          notes: "Found a way to revive Ignatius but failed Oghma's trial to resurrect him.",
+          priority: "medium",
+          reward: "-"
+        }
+      ]
+    };
+
+    let currentTab = 'active';
+
+    function renderQuests() {
+      const list = document.getElementById('quest-list');
+      list.innerHTML = '';
+
+      questData[currentTab].forEach((quest, index) => {
+        const li = document.createElement('li');
+        li.innerText = quest.title;
+        li.classList.add(quest.priority);
+        li.onclick = () => selectQuest(index);
+        if (index === 0) li.classList.add('active');
+        list.appendChild(li);
+      });
+
+      if (questData[currentTab].length > 0) {
+        selectQuest(0);
+      } else {
+        document.querySelector('.quest-title').innerText = 'No quests available';
+        document.querySelector('.quest-lead').innerText = '';
+        document.querySelector('.quest-meta').innerHTML = '<div>-</div>'.repeat(6);
+      }
+    }
+
+    function selectQuest(index) {
+      const quest = questData[currentTab][index];
+      document.querySelector('.quest-title').innerText = quest.title;
+      document.querySelector('.quest-lead').innerText = quest.lead;
+      document.querySelector('.quest-meta').innerHTML = `
+        <div><strong>Giver:</strong> ${quest.giver}</div>
+        <div><strong>Type:</strong> ${quest.type}</div>
+        <div><strong>Location:</strong> ${quest.location}</div>
+        <div><strong>Time Remaining:</strong> ${quest.time}</div>
+        <div><strong>Notes:</strong> ${quest.notes}</div>
+        <div><strong>Reward:</strong> ${quest.reward}</div>
+      `;
+    }
+
+    function switchTab(tabName) {
+      currentTab = tabName;
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      document.querySelector(`.tab:nth-child(${['active','completed','failed'].indexOf(tabName)+1})`).classList.add('active');
+      renderQuests();
+    }
+
+    renderQuests();
+  </script>
+</body>
+</html>
