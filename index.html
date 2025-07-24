@@ -87,6 +87,10 @@
     color: #000;
     font-weight: bold;
   }
+  .tab.drag-over {
+  outline: 2px dashed gold;
+  background-color: #6a3754;
+  }
   select {
     padding: 8px;
     font-size: 14px;
@@ -347,250 +351,353 @@
       <button id="modal-submit-btn">Save Quest</button>
     </div>
   </div>
+<script>
+  function switchSection(sectionId, button) {
+    document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+    document.getElementById(sectionId).classList.add('active');
+    document.querySelectorAll('.topnav button').forEach(btn => btn.classList.remove('active'));
+    button.classList.add('active');
+  }
 
-  <script>
-    // Section switching function
-    function switchSection(sectionId, button) {
-      document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-      document.getElementById(sectionId).classList.add('active');
-      document.querySelectorAll('.topnav button').forEach(btn => btn.classList.remove('active'));
-      button.classList.add('active');
+  const firebaseConfig = {
+    apiKey: "AIzaSyDxSKU85aMBBL6jNvHiaihnWA-vApp-dVk",
+    authDomain: "votw-tracker.firebaseapp.com",
+    projectId: "votw-tracker",
+    storageBucket: "votw-tracker.appspot.com",
+    messagingSenderId: "554314433668",
+    appId: "1:554314433668:web:9818e708d793dcfad2eed1"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  let questData = { active: [], completed: [], failed: [] };
+  let currentTab = 'active';
+  let selectedQuestIndex = null;
+  let draggedQuest = null;
+  let draggedFromStatus = null;
+
+  function switchTab(tabName) {
+    currentTab = tabName;
+    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+    document.querySelector(`.tab:nth-child(${['active','completed','failed'].indexOf(tabName)+1})`).classList.add('active');
+    renderQuests();
+  }
+
+  function renderQuests() {
+    const list = document.getElementById('quest-list');
+    list.innerHTML = '';
+    const priorityFilter = document.getElementById('priority-filter').value;
+    const typeFilter = document.getElementById('type-filter').value;
+    const filtered = questData[currentTab].filter(q =>
+      (!priorityFilter || q.priority === priorityFilter) &&
+      (!typeFilter || (q.type && q.type.toLowerCase() === typeFilter.toLowerCase()))
+    );
+
+    filtered.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
+    filtered.forEach((quest, index) => {
+      const li = document.createElement('li');
+      li.innerText = quest.title;
+      li.classList.add(quest.priority);
+      li.setAttribute('draggable', 'true');
+      li.dataset.index = index;
+
+      li.addEventListener('dragstart', handleDragStart);
+      li.addEventListener('dragover', handleDragOver);
+      li.addEventListener('drop', handleDrop);
+      li.addEventListener('dragend', handleDragEnd);
+
+      li.onclick = () => selectQuest(index, filtered);
+      if (index === 0) li.classList.add('active');
+      list.appendChild(li);
+    });
+
+    if (filtered.length > 0) {
+      selectQuest(0, filtered);
+    } else {
+      document.querySelector('.quest-title').innerText = 'No quests match the filters';
+      document.querySelector('.quest-lead').innerText = '';
+      document.querySelector('.quest-meta').innerHTML = '<div>-</div>'.repeat(6);
     }
+  }
 
-    // Initialize Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyDxSKU85aMBBL6jNvHiaihnWA-vApp-dVk",
-      authDomain: "votw-tracker.firebaseapp.com",
-      projectId: "votw-tracker",
-      storageBucket: "votw-tracker.appspot.com",
-      messagingSenderId: "554314433668",
-      appId: "1:554314433668:web:9818e708d793dcfad2eed1"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+  function handleDragStart(e) {
+    const index = parseInt(e.target.dataset.index);
+    draggedQuest = questData[currentTab][index];
+    draggedFromStatus = currentTab;
+    e.dataTransfer.effectAllowed = 'move';
+    e.target.style.opacity = '0.5';
+  }
 
-    // Quest Tracker Logic
-    let questData = { active: [], completed: [], failed: [] };
-    let currentTab = 'active';
-    let selectedQuestIndex = null;
-    let editingQuestId = null;
+  function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  }
 
-    function switchTab(tabName) {
-      currentTab = tabName;
-      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-      document.querySelector(`.tab:nth-child(${['active','completed','failed'].indexOf(tabName)+1})`).classList.add('active');
-      renderQuests();
-    }
+  function handleDrop(e) {
+    e.preventDefault();
+    const targetIndex = parseInt(e.target.dataset.index);
+    const targetList = questData[currentTab];
 
-    function renderQuests() {
-      const list = document.getElementById('quest-list');
-      list.innerHTML = '';
-      const priorityFilter = document.getElementById('priority-filter').value;
-      const typeFilter = document.getElementById('type-filter').value;
-      const filtered = questData[currentTab].filter(q =>
-        (!priorityFilter || q.priority === priorityFilter) &&
-        (!typeFilter || (q.type && q.type.toLowerCase() === typeFilter.toLowerCase()))
-      );
-      filtered.forEach((quest, index) => {
-        const li = document.createElement('li');
-        li.innerText = quest.title;
-        li.classList.add(quest.priority);
-        li.onclick = () => selectQuest(index, filtered);
-        if (index === 0) li.classList.add('active');
-        list.appendChild(li);
+    // Remove from original list
+    const fromList = questData[draggedFromStatus];
+    const oldIndex = fromList.findIndex(q => q.id === draggedQuest.id);
+    if (oldIndex > -1) fromList.splice(oldIndex, 1);
+
+    // Update status
+    draggedQuest.status = currentTab;
+    targetList.splice(targetIndex, 0, draggedQuest);
+
+    // Update sortOrder in target tab
+    targetList.forEach((q, idx) => {
+      q.sortOrder = idx;
+      db.collection("quests").doc(q.id).update({
+        status: q.status,
+        sortOrder: idx
       });
-      if (filtered.length > 0) {
-        selectQuest(0, filtered);
-      } else {
-        document.querySelector('.quest-title').innerText = 'No quests match the filters';
-        document.querySelector('.quest-lead').innerText = '';
-        document.querySelector('.quest-meta').innerHTML = '<div>-</div>'.repeat(6);
-      }
-    }
+    });
 
-    function selectQuest(index, data) {
-      selectedQuestIndex = index;
-      const quest = data[index];
-      document.querySelector('.quest-title').innerText = quest.title;
-      document.querySelector('.quest-lead').innerText = quest.lead;
-      document.querySelector('.quest-meta').innerHTML = `
-        <div><strong>Giver:</strong> ${quest.giver}</div>
-        <div><strong>Type:</strong> ${quest.type}</div>
-        <div><strong>Location:</strong> ${quest.location}</div>
-        <div><strong>Time Remaining:</strong> ${quest.time}</div>
-        <div><strong>Notes:</strong> ${quest.notes}</div>
-        <div><strong>Reward:</strong> ${quest.reward}</div>
-      `;
-      document.querySelectorAll('.quest-list li').forEach((li, i) => li.classList.toggle('active', i === index));
-    }
+    // Update sortOrder in original tab
+    fromList.forEach((q, idx) => {
+      q.sortOrder = idx;
+      db.collection("quests").doc(q.id).update({
+        sortOrder: idx
+      });
+    });
 
-    // Modal functions for adding/editing quests
-    function openModal(mode = 'add', quest = null) {
-      const modal = document.getElementById('quest-modal');
-      const modalHeader = document.getElementById('modal-header');
-      // Populate fields if editing
-      document.getElementById('modal-title-input').value = quest ? quest.title : '';
-      document.getElementById('modal-lead-input').value = quest ? quest.lead : '';
-      document.getElementById('modal-giver-input').value = quest ? quest.giver : '';
-      document.getElementById('modal-type-input').value = quest ? quest.type : '';
-      document.getElementById('modal-location-input').value = quest ? quest.location : '';
-      document.getElementById('modal-time-input').value = quest ? quest.time : '';
-      document.getElementById('modal-notes-input').value = quest ? quest.notes : '';
-      document.getElementById('modal-reward-input').value = quest ? quest.reward : '';
-      document.getElementById('modal-priority-select').value = quest ? quest.priority : 'low';
-      document.getElementById('modal-status-select').value = quest ? quest.status : 'active';
-      
-      modalHeader.innerText = mode === 'edit' ? 'Edit Quest' : 'Add Quest';
-      
-      modal.style.display = 'flex';
-      
-      document.getElementById('modal-submit-btn').onclick = function() {
-        const newQuest = {
-          title: document.getElementById('modal-title-input').value,
-          lead: document.getElementById('modal-lead-input').value,
-          giver: document.getElementById('modal-giver-input').value,
-          type: document.getElementById('modal-type-input').value,
-          location: document.getElementById('modal-location-input').value,
-          time: document.getElementById('modal-time-input').value,
-          notes: document.getElementById('modal-notes-input').value,
-          reward: document.getElementById('modal-reward-input').value,
-          priority: document.getElementById('modal-priority-select').value,
-          status: document.getElementById('modal-status-select').value
-        };
-        if (!newQuest.title.trim()) {
-          alert("Title is required.");
-          return;
-        }
-        if (mode === 'edit' && quest && quest.id) {
-          db.collection("quests").doc(quest.id).set(newQuest).then(() => {
-            alert("Quest updated!");
-            closeModal();
-            location.reload();
-          });
-        } else {
-          db.collection("quests").add(newQuest).then(() => {
-            alert("Quest added!");
-            closeModal();
-            location.reload();
-          });
-        }
+    renderQuests();
+  }
+
+  function handleDragEnd(e) {
+    e.target.style.opacity = '';
+    draggedQuest = null;
+    draggedFromStatus = null;
+  }
+
+  function selectQuest(index, data) {
+    selectedQuestIndex = index;
+    const quest = data[index];
+    document.querySelector('.quest-title').innerText = quest.title;
+    document.querySelector('.quest-lead').innerText = quest.lead;
+    document.querySelector('.quest-meta').innerHTML = `
+      <div><strong>Giver:</strong> ${quest.giver}</div>
+      <div><strong>Type:</strong> ${quest.type}</div>
+      <div><strong>Location:</strong> ${quest.location}</div>
+      <div><strong>Time Remaining:</strong> ${quest.time}</div>
+      <div><strong>Notes:</strong> ${quest.notes}</div>
+      <div><strong>Reward:</strong> ${quest.reward}</div>
+    `;
+    document.querySelectorAll('.quest-list li').forEach((li, i) => li.classList.toggle('active', i === index));
+  }
+
+  function openModal(mode = 'add', quest = null) {
+    const modal = document.getElementById('quest-modal');
+    const modalHeader = document.getElementById('modal-header');
+
+    document.getElementById('modal-title-input').value = quest ? quest.title : '';
+    document.getElementById('modal-lead-input').value = quest ? quest.lead : '';
+    document.getElementById('modal-giver-input').value = quest ? quest.giver : '';
+    document.getElementById('modal-type-input').value = quest ? quest.type : '';
+    document.getElementById('modal-location-input').value = quest ? quest.location : '';
+    document.getElementById('modal-time-input').value = quest ? quest.time : '';
+    document.getElementById('modal-notes-input').value = quest ? quest.notes : '';
+    document.getElementById('modal-reward-input').value = quest ? quest.reward : '';
+    document.getElementById('modal-priority-select').value = quest ? quest.priority : 'low';
+    document.getElementById('modal-status-select').value = quest ? quest.status : 'active';
+
+    modalHeader.innerText = mode === 'edit' ? 'Edit Quest' : 'Add Quest';
+    modal.style.display = 'flex';
+
+    document.getElementById('modal-submit-btn').onclick = function() {
+      const newQuest = {
+        title: document.getElementById('modal-title-input').value,
+        lead: document.getElementById('modal-lead-input').value,
+        giver: document.getElementById('modal-giver-input').value,
+        type: document.getElementById('modal-type-input').value,
+        location: document.getElementById('modal-location-input').value,
+        time: document.getElementById('modal-time-input').value,
+        notes: document.getElementById('modal-notes-input').value,
+        reward: document.getElementById('modal-reward-input').value,
+        priority: document.getElementById('modal-priority-select').value,
+        status: document.getElementById('modal-status-select').value,
+        sortOrder: questData[document.getElementById('modal-status-select').value]?.length || 0
       };
-    }
-    
-    function closeModal(){
-      document.getElementById('quest-modal').style.display = 'none';
-    }
-    
-    function editQuest() {
-      if (selectedQuestIndex === null) return;
-      openModal('edit', questData[currentTab][selectedQuestIndex]);
-    }
-
-    function deleteQuest() {
-      const quest = questData[currentTab][selectedQuestIndex];
-      if (confirm(`Delete quest "${quest.title}"?`)) {
-        db.collection("quests").doc(quest.id).delete().then(() => {
-          alert("Quest deleted!");
+      if (!newQuest.title.trim()) {
+        alert("Title is required.");
+        return;
+      }
+      if (mode === 'edit' && quest && quest.id) {
+        db.collection("quests").doc(quest.id).set(newQuest).then(() => {
+          alert("Quest updated!");
+          closeModal();
+          location.reload();
+        });
+      } else {
+        db.collection("quests").add(newQuest).then(() => {
+          alert("Quest added!");
+          closeModal();
           location.reload();
         });
       }
-    }
+    };
+  }
 
-    // Load quests from Firebase
-    db.collection("quests").get().then(snapshot => {
-      snapshot.forEach(doc => {
-        const quest = doc.data();
-        quest.id = doc.id;
-        if (quest.status && questData[quest.status]) {
-          questData[quest.status].push(quest);
-        }
+  function closeModal(){
+    document.getElementById('quest-modal').style.display = 'none';
+  }
+
+  function editQuest() {
+    if (selectedQuestIndex === null) return;
+    openModal('edit', questData[currentTab][selectedQuestIndex]);
+  }
+
+  function deleteQuest() {
+    const quest = questData[currentTab][selectedQuestIndex];
+    if (confirm(`Delete quest "${quest.title}"?`)) {
+      db.collection("quests").doc(quest.id).delete().then(() => {
+        alert("Quest deleted!");
+        location.reload();
       });
-      renderQuests();
+    }
+  }
+
+db.collection("quests").onSnapshot(snapshot => {
+  // Clear old data
+  questData = { active: [], completed: [], failed: [] };
+
+  snapshot.forEach(doc => {
+    const quest = doc.data();
+    quest.id = doc.id;
+    if (quest.sortOrder === undefined) quest.sortOrder = 0;
+    if (quest.status && questData[quest.status]) {
+      questData[quest.status].push(quest);
+    }
+  });
+
+  renderQuests();
+});
+
+  const npcs = [
+    { name: 'Sally', country: 'Shattered Isles', region: 'Quillport', image: 'https://via.placeholder.com/150?text=Nyx' },
+    { name: 'Anathea Dusksense', country: 'Thornmere', region: 'Fernwick Village', image: 'https://via.placeholder.com/150?text=Liora' },
+    { name: 'Diana Daerith', country: 'Shattered Isles', region: 'Luminara', image: 'https://via.placeholder.com/150?text=Thorne' },
+    { name: 'Miri Roux', country: 'Thornmere', region: 'Rafflesian Wilds', image: 'https://via.placeholder.com/150?text=Liora' },
+  ];
+
+  const npcContainer = document.getElementById('npc-container');
+  const countryButtons = document.getElementById('country-buttons');
+  const countries = [...new Set(npcs.map(n => n.country))];
+  let activeCountry = countries[0];
+  let searchQuery = '';
+
+  function renderCountryButtons() {
+    countryButtons.innerHTML = '';
+    countries.forEach(country => {
+      const btn = document.createElement('button');
+      btn.innerText = country;
+      btn.className = country === activeCountry ? 'active' : '';
+      btn.onclick = () => {
+        activeCountry = country;
+        renderNPCs();
+        renderCountryButtons();
+      };
+      countryButtons.appendChild(btn);
+    });
+  }
+
+  function renderNPCs() {
+    npcContainer.innerHTML = '';
+    const filtered = npcs.filter(n =>
+      n.country === activeCountry &&
+      n.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const groupedByRegion = {};
+    filtered.forEach(npc => {
+      if (!groupedByRegion[npc.region]) groupedByRegion[npc.region] = [];
+      groupedByRegion[npc.region].push(npc);
     });
 
-    // NPC Library Logic
-    const npcs = [
-	  { name: 'Sally', country: 'Shattered Isles', region: 'Quillport', image: 'https://via.placeholder.com/150?text=Nyx' },
-      { name: 'Anathea Dusksense', country: 'Thornmere', region: 'Fernwick Village', image: 'https://via.placeholder.com/150?text=Liora' },
-      { name: 'Diana Daerith', country: 'Shattered Isles', region: 'Luminara', image: 'https://via.placeholder.com/150?text=Thorne' },
-	  { name: 'Miri Roux', country: 'Thornmere', region: 'Rafflesian Wilds', image: 'https://via.placeholder.com/150?text=Liora' },
+    Object.keys(groupedByRegion).sort().forEach(region => {
+      const regionDiv = document.createElement('div');
+      regionDiv.className = 'region';
 
-    ];
+      const title = document.createElement('h3');
+      title.innerText = region;
+      title.onclick = () => {
+        content.classList.toggle('active');
+      };
 
-    const npcContainer = document.getElementById('npc-container');
-    const countryButtons = document.getElementById('country-buttons');
-    const countries = [...new Set(npcs.map(n => n.country))];
-    let activeCountry = countries[0];
-    let searchQuery = '';
+      const content = document.createElement('div');
+      content.className = 'region-content';
 
-    function renderCountryButtons() {
-      countryButtons.innerHTML = '';
-      countries.forEach(country => {
-        const btn = document.createElement('button');
-        btn.innerText = country;
-        btn.className = country === activeCountry ? 'active' : '';
-        btn.onclick = () => {
-          activeCountry = country;
-          renderNPCs();
-          renderCountryButtons();
-        };
-        countryButtons.appendChild(btn);
-      });
-    }
+      const container = document.createElement('div');
+      container.className = 'npc-tile-container';
 
-    function renderNPCs() {
-      npcContainer.innerHTML = '';
-      const filtered = npcs.filter(n =>
-        n.country === activeCountry &&
-        n.name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-
-      const groupedByRegion = {};
-      filtered.forEach(npc => {
-        if (!groupedByRegion[npc.region]) groupedByRegion[npc.region] = [];
-        groupedByRegion[npc.region].push(npc);
+      groupedByRegion[region].sort((a, b) => a.name.localeCompare(b.name)).forEach(npc => {
+        const card = document.createElement('div');
+        card.className = 'npc-card';
+        card.innerHTML = `
+          <img src="${npc.image}" alt="${npc.name}" />
+          <div class="npc-name">${npc.name}</div>
+        `;
+        container.appendChild(card);
       });
 
-      Object.keys(groupedByRegion).sort().forEach(region => {
-        const regionDiv = document.createElement('div');
-        regionDiv.className = 'region';
+      content.appendChild(container);
+      regionDiv.appendChild(title);
+      regionDiv.appendChild(content);
+      npcContainer.appendChild(regionDiv);
+    });
+  }
 
-        const title = document.createElement('h3');
-        title.innerText = region;
-        title.onclick = () => {
-          content.classList.toggle('active');
-        };
-
-        const content = document.createElement('div');
-        content.className = 'region-content';
-
-        const container = document.createElement('div');
-        container.className = 'npc-tile-container';
-
-        groupedByRegion[region].sort((a, b) => a.name.localeCompare(b.name)).forEach(npc => {
-          const card = document.createElement('div');
-          card.className = 'npc-card';
-          card.innerHTML = `
-            <img src="${npc.image}" alt="${npc.name}" />
-            <div class="npc-name">${npc.name}</div>
-          `;
-          container.appendChild(card);
-        });
-
-        content.appendChild(container);
-        regionDiv.appendChild(title);
-        regionDiv.appendChild(content);
-        npcContainer.appendChild(regionDiv);
-      });
-    }
-
-    function searchNPCs(query) {
-      searchQuery = query.toLowerCase();
-      renderNPCs();
-    }
-
-    renderCountryButtons();
+  function searchNPCs(query) {
+    searchQuery = query.toLowerCase();
     renderNPCs();
-  </script>
+  }
+
+  renderCountryButtons();
+  renderNPCs();
+  
+	// Enable drop on status tabs
+	document.querySelectorAll('.tab').forEach(tab => {
+	tab.addEventListener('dragover', e => {
+    e.preventDefault();
+    tab.classList.add('drag-over');
+	});
+
+	tab.addEventListener('dragleave', () => {
+    tab.classList.remove('drag-over');
+	});
+
+	tab.addEventListener('drop', e => {
+	e.preventDefault();
+    tab.classList.remove('drag-over');
+
+    const newStatus = tab.textContent.trim().toLowerCase();
+    if (!draggedQuest || !newStatus || newStatus === draggedQuest.status) return;
+
+    // Remove from original list
+    const fromList = questData[draggedQuest.status];
+    const oldIndex = fromList.findIndex(q => q.id === draggedQuest.id);
+    if (oldIndex > -1) fromList.splice(oldIndex, 1);
+
+    // Add to new status list
+    draggedQuest.status = newStatus;
+    draggedQuest.sortOrder = questData[newStatus].length;
+    questData[newStatus].push(draggedQuest);
+
+    db.collection("quests").doc(draggedQuest.id).update({
+      status: newStatus,
+      sortOrder: draggedQuest.sortOrder
+		});
+
+		renderQuests();
+		switchTab(newStatus);
+		});
+	});
+</script>
+
+
 </body>
 </html>
