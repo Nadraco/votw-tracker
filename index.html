@@ -1,159 +1,288 @@
-<!-- Paste this into your HTML file -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Firebase SDKs -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VOTW Tracker</title>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDxSKU85aMBBL6jNvHiaihnWA-vApp-dVk",
-      authDomain: "votw-tracker.firebaseapp.com",
-      projectId: "votw-tracker",
-      storageBucket: "votw-tracker.firebasestorage.app",
-      messagingSenderId: "554314433668",
-      appId: "1:554314433668:web:9818e708d793dcfad2eed1"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-  </script>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VOTW Tracker</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to bottom, #2e1a32, #2e1e23);
-      color: #fff;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-    .topnav {
-      display: flex;
-      background-color: #1c1020;
-      padding: 10px 20px;
-      border-bottom: 2px solid #4d2d3e;
-    }
-    .topnav button {
-      margin-right: 10px;
-      background: #3e2337;
-      color: #fff;
-      padding: 8px 16px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .topnav button.active {
-      background-color: gold;
-      color: black;
-      font-weight: bold;
-    }
-    .content {
-      flex: 1;
-      display: flex;
-    }
-    .sidebar, .main {
-      padding: 20px;
-    }
-    .sidebar {
-      width: 300px;
-      background-color: #2b162a;
-      border-right: 2px solid #5c3b4e;
-    }
-    .tabs {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-    .tab {
-      padding: 6px 12px;
-      background: #3e2337;
-      color: #fff;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .tab.active {
-      background: gold;
-      color: #000;
-      font-weight: bold;
-    }
-    .quest-list {
-      list-style: none;
-      padding: 0;
-    }
-    .quest-list li {
-      padding: 8px 12px;
-      margin-bottom: 6px;
-      background: #1f0f1a;
-      border-left: 5px solid transparent;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .quest-list li.high { border-left: 5px solid red; }
-    .quest-list li.medium { border-left: 5px solid orange; }
-    .quest-list li.low { border-left: 5px solid yellow; }
-    .quest-list li.active {
-      background: #2a1120;
-      font-weight: bold;
-    }
-    .main {
-      flex: 1;
-      padding: 30px;
-    }
-    .quest-title {
-      font-size: 24px;
-      font-weight: bold;
-      color: gold;
-      margin-bottom: 20px;
-    }
-    .quest-lead, .quest-meta {
-      color: #d2c6ca;
-      margin-bottom: 10px;
-    }
-    .quest-meta div {
-      margin-bottom: 5px;
-    }
-    #quest-modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background-color: rgba(0,0,0,0.6);
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-    #quest-modal > div {
-      background: #2e1a32;
-      padding: 20px;
-      border-radius: 10px;
-      width: 400px;
-      position: relative;
-    }
-    #quest-modal input, #quest-modal select {
-      width: 100%;
-      margin-bottom: 5px;
-      padding: 8px;
-      border: none;
-      border-radius: 4px;
-    }
-  </style>
+<style>
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(to bottom, #2e1a32, #2e1e23);
+    color: #fff;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .topnav {
+    display: flex;
+    background-color: #1c1020;
+    padding: 12px 20px;
+    gap: 10px;
+    border-bottom: 2px solid #4d2d3e;
+  }
+  .topnav button {
+    background: #3e2337;
+    color: #fff;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 15px;
+    transition: 0.2s;
+  }
+  .topnav button:hover {
+    opacity: 0.9;
+  }
+  .topnav button.active {
+    background-color: gold;
+    color: black;
+    font-weight: bold;
+  }
+  .content {
+    flex: 1;
+    display: none;
+    overflow: hidden;
+  }
+  .content.active {
+    display: flex;
+    overflow: hidden;
+  }
+  .sidebar {
+    width: 300px;
+    background-color: #2b162a;
+    padding: 20px;
+    border-right: 2px solid #5c3b4e;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .main {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+  }
+
+  /* Quest Tracker */
+  .tabs {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .tab {
+    padding: 8px 14px;
+    background: #3e2337;
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .tab.active {
+    background: gold;
+    color: #000;
+    font-weight: bold;
+  }
+  select {
+    padding: 8px;
+    font-size: 14px;
+    border-radius: 4px;
+    border: none;
+    background: #3e2337;
+    color: #fff;
+  }
+  .quest-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .quest-list li {
+    padding: 10px 14px;
+    margin-bottom: 6px;
+    background: #1f0f1a;
+    border-left: 5px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .quest-list li:hover {
+    background: #291724;
+  }
+  .quest-list li.high { border-left-color: red; }
+  .quest-list li.medium { border-left-color: orange; }
+  .quest-list li.low { border-left-color: yellow; }
+  .quest-list li.active {
+    background: #2a1120;
+    font-weight: bold;
+  }
+  .quest-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: gold;
+    margin-bottom: 12px;
+  }
+  .quest-lead {
+    margin-bottom: 10px;
+    font-size: 16px;
+    color: #ccc;
+  }
+  .quest-meta div {
+    margin-bottom: 6px;
+    font-size: 14px;
+    color: #d2c6ca;
+  }
+
+  /* NPC Library */
+  .npc-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .npc-tabs button {
+    padding: 6px 12px;
+    background: #3e2337;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .npc-tabs button.active {
+    background: gold;
+    color: black;
+    font-weight: bold;
+  }
+  .npc-search input {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: none;
+    background: #1f0f1a;
+    color: #fff;
+  }
+
+  .region {
+    margin-bottom: 20px;
+  }
+  .region h3 {
+    margin: 0;
+    cursor: pointer;
+    padding: 10px;
+    background: #3e2337;
+    border-radius: 6px;
+    font-size: 16px;
+  }
+  .region-content {
+    padding: 10px;
+    display: none;
+  }
+  .region-content.active {
+    display: block;
+  }
+  .npc-tile-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 16px;
+  }
+  .npc-card {
+    background: #1f0f1a;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+    transition: 0.2s;
+  }
+  .npc-card:hover {
+    background: #281624;
+  }
+  .npc-card img {
+    width: 100%;
+    max-width: 120px;
+    height: auto;
+    border-radius: 8px;
+    margin-bottom: 8px;
+  }
+  .npc-name {
+    font-weight: bold;
+    color: white;
+    font-size: 14px;
+  }
+
+  /* Modal */
+  #quest-modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  #quest-modal > div {
+    background: #2e1a32;
+    padding: 24px;
+    border-radius: 10px;
+    width: 400px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  #quest-modal h2 {
+    color: gold;
+    margin-bottom: 16px;
+    font-size: 20px;
+  }
+  #quest-modal input,
+  #quest-modal select {
+    margin-bottom: 10px;
+    padding: 8px;
+    border-radius: 4px;
+    border: none;
+    background: #3e2337;
+    color: #fff;
+    font-size: 14px;
+  }
+  #quest-modal button {
+    padding: 10px;
+    background: gold;
+    border: none;
+    border-radius: 4px;
+    color: black;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 15px;
+  }
+  #modal-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: white;
+    cursor: pointer;
+  }
+</style>
+
 </head>
 <body>
   <div class="topnav">
-    <button class="active" onclick="showSection('quest-tracker', this)">Quest Tracker</button>
+    <button class="active" onclick="switchSection('quest-tracker', this)">Quest Tracker</button>
+    <button onclick="switchSection('npc-library', this)">NPC Library</button>
   </div>
-  <div class="content" id="quest-tracker">
+
+  <!-- QUEST TRACKER -->
+  <div id="quest-tracker" class="content active">
     <div class="sidebar">
       <div class="tabs">
         <div class="tab active" onclick="switchTab('active')">Active</div>
         <div class="tab" onclick="switchTab('completed')">Completed</div>
         <div class="tab" onclick="switchTab('failed')">Failed</div>
       </div>
-      <!-- FILTER UI -->
       <div style="margin-bottom: 10px;">
         <select id="priority-filter" onchange="renderQuests()" style="width: 100%; margin-bottom: 5px;">
           <option value="">All Priorities</option>
@@ -181,34 +310,193 @@
     </div>
   </div>
 
-  <!-- MODAL -->
+  <!-- NPC LIBRARY -->
+  <div id="npc-library" class="content">
+    <div class="sidebar">
+      <div class="npc-tabs" id="country-buttons"></div>
+      <div class="npc-search">
+        <input type="text" placeholder="Search NPCs..." oninput="searchNPCs(this.value)" />
+      </div>
+    </div>
+    <div class="main" id="npc-container"></div>
+  </div>
+
+  <!-- QUEST MODAL -->
   <div id="quest-modal">
     <div>
-      <h2 style="margin-top:0; color:gold;" id="modal-title">Add/Edit Quest</h2>
-      <input type="text" id="quest-title" placeholder="Title" />
-      <input type="text" id="quest-lead" placeholder="Lead" />
-      <input type="text" id="quest-giver" placeholder="Giver" />
-      <input type="text" id="quest-type" placeholder="Type (Personal/Party)" />
-      <input type="text" id="quest-location" placeholder="Location" />
-      <input type="text" id="quest-time" placeholder="Time Remaining" />
-      <input type="text" id="quest-notes" placeholder="Notes" />
-      <input type="text" id="quest-reward" placeholder="Reward" />
-      <select id="quest-priority">
-        <option value="low">Low</option>
-        <option value="medium">Medium</option>
+      <button id="modal-close-btn" onclick="closeModal()">&times;</button>
+      <h2 id="modal-header">Add/Edit Quest</h2>
+      <input type="text" id="modal-title-input" placeholder="Title" />
+      <input type="text" id="modal-lead-input" placeholder="Lead" />
+      <input type="text" id="modal-giver-input" placeholder="Giver" />
+      <input type="text" id="modal-type-input" placeholder="Type (Personal/Party)" />
+      <input type="text" id="modal-location-input" placeholder="Location" />
+      <input type="text" id="modal-time-input" placeholder="Time Remaining" />
+      <input type="text" id="modal-notes-input" placeholder="Notes" />
+      <input type="text" id="modal-reward-input" placeholder="Reward" />
+      <select id="modal-priority-select">
         <option value="high">High</option>
+        <option value="medium">Medium</option>
+        <option value="low">Low</option>
       </select>
-      <button id="modal-submit-btn" style="width:100%; padding:8px; background: gold; color:black; font-weight:bold; border:none; border-radius:4px;">Save</button>
-      <button onclick="closeModal()" style="position:absolute; top:10px; right:10px; background:none; border:none; color:white; font-size:18px; cursor:pointer;">✖</button>
+      <select id="modal-status-select">
+        <option value="active">Active</option>
+        <option value="completed">Completed</option>
+        <option value="failed">Failed</option>
+      </select>
+      <button id="modal-submit-btn">Save Quest</button>
     </div>
   </div>
 
   <script>
-    const questData = { active: [], completed: [], failed: [] };
+    // Section switching function
+    function switchSection(sectionId, button) {
+      document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+      document.getElementById(sectionId).classList.add('active');
+      document.querySelectorAll('.topnav button').forEach(btn => btn.classList.remove('active'));
+      button.classList.add('active');
+    }
+
+    // Initialize Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyDxSKU85aMBBL6jNvHiaihnWA-vApp-dVk",
+      authDomain: "votw-tracker.firebaseapp.com",
+      projectId: "votw-tracker",
+      storageBucket: "votw-tracker.appspot.com",
+      messagingSenderId: "554314433668",
+      appId: "1:554314433668:web:9818e708d793dcfad2eed1"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Quest Tracker Logic
+    let questData = { active: [], completed: [], failed: [] };
     let currentTab = 'active';
     let selectedQuestIndex = null;
     let editingQuestId = null;
 
+    function switchTab(tabName) {
+      currentTab = tabName;
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      document.querySelector(`.tab:nth-child(${['active','completed','failed'].indexOf(tabName)+1})`).classList.add('active');
+      renderQuests();
+    }
+
+    function renderQuests() {
+      const list = document.getElementById('quest-list');
+      list.innerHTML = '';
+      const priorityFilter = document.getElementById('priority-filter').value;
+      const typeFilter = document.getElementById('type-filter').value;
+      const filtered = questData[currentTab].filter(q =>
+        (!priorityFilter || q.priority === priorityFilter) &&
+        (!typeFilter || (q.type && q.type.toLowerCase() === typeFilter.toLowerCase()))
+      );
+      filtered.forEach((quest, index) => {
+        const li = document.createElement('li');
+        li.innerText = quest.title;
+        li.classList.add(quest.priority);
+        li.onclick = () => selectQuest(index, filtered);
+        if (index === 0) li.classList.add('active');
+        list.appendChild(li);
+      });
+      if (filtered.length > 0) {
+        selectQuest(0, filtered);
+      } else {
+        document.querySelector('.quest-title').innerText = 'No quests match the filters';
+        document.querySelector('.quest-lead').innerText = '';
+        document.querySelector('.quest-meta').innerHTML = '<div>-</div>'.repeat(6);
+      }
+    }
+
+    function selectQuest(index, data) {
+      selectedQuestIndex = index;
+      const quest = data[index];
+      document.querySelector('.quest-title').innerText = quest.title;
+      document.querySelector('.quest-lead').innerText = quest.lead;
+      document.querySelector('.quest-meta').innerHTML = `
+        <div><strong>Giver:</strong> ${quest.giver}</div>
+        <div><strong>Type:</strong> ${quest.type}</div>
+        <div><strong>Location:</strong> ${quest.location}</div>
+        <div><strong>Time Remaining:</strong> ${quest.time}</div>
+        <div><strong>Notes:</strong> ${quest.notes}</div>
+        <div><strong>Reward:</strong> ${quest.reward}</div>
+      `;
+      document.querySelectorAll('.quest-list li').forEach((li, i) => li.classList.toggle('active', i === index));
+    }
+
+    // Modal functions for adding/editing quests
+    function openModal(mode = 'add', quest = null) {
+      const modal = document.getElementById('quest-modal');
+      const modalHeader = document.getElementById('modal-header');
+      // Populate fields if editing
+      document.getElementById('modal-title-input').value = quest ? quest.title : '';
+      document.getElementById('modal-lead-input').value = quest ? quest.lead : '';
+      document.getElementById('modal-giver-input').value = quest ? quest.giver : '';
+      document.getElementById('modal-type-input').value = quest ? quest.type : '';
+      document.getElementById('modal-location-input').value = quest ? quest.location : '';
+      document.getElementById('modal-time-input').value = quest ? quest.time : '';
+      document.getElementById('modal-notes-input').value = quest ? quest.notes : '';
+      document.getElementById('modal-reward-input').value = quest ? quest.reward : '';
+      document.getElementById('modal-priority-select').value = quest ? quest.priority : 'low';
+      document.getElementById('modal-status-select').value = quest ? quest.status : 'active';
+      
+      modalHeader.innerText = mode === 'edit' ? 'Edit Quest' : 'Add Quest';
+      
+      modal.style.display = 'flex';
+      
+      document.getElementById('modal-submit-btn').onclick = function() {
+        const newQuest = {
+          title: document.getElementById('modal-title-input').value,
+          lead: document.getElementById('modal-lead-input').value,
+          giver: document.getElementById('modal-giver-input').value,
+          type: document.getElementById('modal-type-input').value,
+          location: document.getElementById('modal-location-input').value,
+          time: document.getElementById('modal-time-input').value,
+          notes: document.getElementById('modal-notes-input').value,
+          reward: document.getElementById('modal-reward-input').value,
+          priority: document.getElementById('modal-priority-select').value,
+          status: document.getElementById('modal-status-select').value
+        };
+        if (!newQuest.title.trim()) {
+          alert("Title is required.");
+          return;
+        }
+        if (mode === 'edit' && quest && quest.id) {
+          db.collection("quests").doc(quest.id).set(newQuest).then(() => {
+            alert("Quest updated!");
+            closeModal();
+            location.reload();
+          });
+        } else {
+          db.collection("quests").add(newQuest).then(() => {
+            alert("Quest added!");
+            closeModal();
+            location.reload();
+          });
+        }
+      };
+    }
+    
+    function closeModal(){
+      document.getElementById('quest-modal').style.display = 'none';
+    }
+    
+    function editQuest() {
+      if (selectedQuestIndex === null) return;
+      openModal('edit', questData[currentTab][selectedQuestIndex]);
+    }
+
+    function deleteQuest() {
+      const quest = questData[currentTab][selectedQuestIndex];
+      if (confirm(`Delete quest "${quest.title}"?`)) {
+        db.collection("quests").doc(quest.id).delete().then(() => {
+          alert("Quest deleted!");
+          location.reload();
+        });
+      }
+    }
+
+    // Load quests from Firebase
     db.collection("quests").get().then(snapshot => {
       snapshot.forEach(doc => {
         const quest = doc.data();
@@ -220,30 +508,89 @@
       renderQuests();
     });
 
-    function renderQuests() {
-      const list = document.getElementById('quest-list');
-      list.innerHTML = '';
-      if (!questData[currentTab]) return;
+    // NPC Library Logic
+    const npcs = [
+	  { name: 'Sally', country: 'Shattered Isles', region: 'Quillport', image: 'https://via.placeholder.com/150?text=Nyx' },
+      { name: 'Anathea Dusksense', country: 'Thornmere', region: 'Fernwick Village', image: 'https://via.placeholder.com/150?text=Liora' },
+      { name: 'Diana Daerith', country: 'Shattered Isles', region: 'Luminara', image: 'https://via.placeholder.com/150?text=Thorne' },
+	  { name: 'Miri Roux', country: 'Thornmere', region: 'Rafflesian Wilds', image: 'https://via.placeholder.com/150?text=Liora' },
 
-      const priorityFilter = document.getElementById('priority-filter').value;
-      const typeFilter = document.getElementById('type-filter').value;
+    ];
 
-      const filtered = questData[currentTab].filter(q => {
-        const matchesPriority = priorityFilter === '' || q.priority === priorityFilter;
-        const matchesType = typeFilter === '' || (q.type && q.type.toLowerCase() === typeFilter.toLowerCase());
-        return matchesPriority && matchesType;
+    const npcContainer = document.getElementById('npc-container');
+    const countryButtons = document.getElementById('country-buttons');
+    const countries = [...new Set(npcs.map(n => n.country))];
+    let activeCountry = countries[0];
+    let searchQuery = '';
+
+    function renderCountryButtons() {
+      countryButtons.innerHTML = '';
+      countries.forEach(country => {
+        const btn = document.createElement('button');
+        btn.innerText = country;
+        btn.className = country === activeCountry ? 'active' : '';
+        btn.onclick = () => {
+          activeCountry = country;
+          renderNPCs();
+          renderCountryButtons();
+        };
+        countryButtons.appendChild(btn);
+      });
+    }
+
+    function renderNPCs() {
+      npcContainer.innerHTML = '';
+      const filtered = npcs.filter(n =>
+        n.country === activeCountry &&
+        n.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+
+      const groupedByRegion = {};
+      filtered.forEach(npc => {
+        if (!groupedByRegion[npc.region]) groupedByRegion[npc.region] = [];
+        groupedByRegion[npc.region].push(npc);
       });
 
-      filtered.forEach((quest, index) => {
-        const li = document.createElement('li');
-        li.innerText = quest.title;
-        li.classList.add(quest.priority);
-        li.onclick = () => selectQuest(index, filtered);
-        if (index === 0) li.classList.add('active');
-        list.appendChild(li);
-      });
+      Object.keys(groupedByRegion).sort().forEach(region => {
+        const regionDiv = document.createElement('div');
+        regionDiv.className = 'region';
 
-      if (filtered.length > 0) {
-        selectQuest(0, filtered);
-      } else {
-        document.querySelector('.quest-title').innerText = 'No quests match the filt
+        const title = document.createElement('h3');
+        title.innerText = region;
+        title.onclick = () => {
+          content.classList.toggle('active');
+        };
+
+        const content = document.createElement('div');
+        content.className = 'region-content';
+
+        const container = document.createElement('div');
+        container.className = 'npc-tile-container';
+
+        groupedByRegion[region].sort((a, b) => a.name.localeCompare(b.name)).forEach(npc => {
+          const card = document.createElement('div');
+          card.className = 'npc-card';
+          card.innerHTML = `
+            <img src="${npc.image}" alt="${npc.name}" />
+            <div class="npc-name">${npc.name}</div>
+          `;
+          container.appendChild(card);
+        });
+
+        content.appendChild(container);
+        regionDiv.appendChild(title);
+        regionDiv.appendChild(content);
+        npcContainer.appendChild(regionDiv);
+      });
+    }
+
+    function searchNPCs(query) {
+      searchQuery = query.toLowerCase();
+      renderNPCs();
+    }
+
+    renderCountryButtons();
+    renderNPCs();
+  </script>
+</body>
+</html>
