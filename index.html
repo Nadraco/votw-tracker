@@ -1,3 +1,4 @@
+<!-- Paste this into your HTML file -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,7 +14,6 @@
       messagingSenderId: "554314433668",
       appId: "1:554314433668:web:9818e708d793dcfad2eed1"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
   </script>
@@ -30,14 +30,12 @@
       display: flex;
       flex-direction: column;
     }
-
     .topnav {
       display: flex;
       background-color: #1c1020;
       padding: 10px 20px;
       border-bottom: 2px solid #4d2d3e;
     }
-
     .topnav button {
       margin-right: 10px;
       background: #3e2337;
@@ -47,35 +45,29 @@
       border-radius: 4px;
       cursor: pointer;
     }
-
     .topnav button.active {
       background-color: gold;
       color: black;
       font-weight: bold;
     }
-
     .content {
       flex: 1;
       display: flex;
     }
-
     .sidebar, .main {
       padding: 20px;
     }
-
     .sidebar {
       width: 300px;
       background-color: #2b162a;
       border-right: 2px solid #5c3b4e;
     }
-
     .tabs {
       display: flex;
       gap: 10px;
       margin-bottom: 20px;
       flex-wrap: wrap;
     }
-
     .tab {
       padding: 6px 12px;
       background: #3e2337;
@@ -83,18 +75,15 @@
       border-radius: 4px;
       cursor: pointer;
     }
-
     .tab.active {
       background: gold;
       color: #000;
       font-weight: bold;
     }
-
     .quest-list {
       list-style: none;
       padding: 0;
     }
-
     .quest-list li {
       padding: 8px 12px;
       margin-bottom: 6px;
@@ -103,105 +92,59 @@
       border-radius: 4px;
       cursor: pointer;
     }
-
     .quest-list li.high { border-left: 5px solid red; }
     .quest-list li.medium { border-left: 5px solid orange; }
     .quest-list li.low { border-left: 5px solid yellow; }
-
     .quest-list li.active {
       background: #2a1120;
       font-weight: bold;
     }
-
     .main {
       flex: 1;
       padding: 30px;
     }
-
     .quest-title {
       font-size: 24px;
       font-weight: bold;
       color: gold;
       margin-bottom: 20px;
     }
-
     .quest-lead, .quest-meta {
       color: #d2c6ca;
       margin-bottom: 10px;
     }
-
     .quest-meta div {
       margin-bottom: 5px;
     }
-
-    #npc-library {
+    #quest-modal {
       display: none;
-      flex-direction: column;
-      padding: 20px;
-    }
-
-    .npc-tabs {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    .npc-tabs button {
-      padding: 6px 12px;
-      background: #3e2337;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .npc-tabs button.active {
-      background: gold;
-      color: black;
-      font-weight: bold;
-    }
-
-    .npc-search {
-      margin-bottom: 20px;
-    }
-
-    .npc-search input {
-      width: 100%;
-      padding: 8px;
-      border-radius: 4px;
-      border: none;
-    }
-
-    .npc-section {
-      display: none;
-    }
-
-    .npc-tile-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 20px;
-    }
-
-    .npc-card {
-      display: flex;
-      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.6);
+      justify-content: center;
       align-items: center;
-      text-align: center;
+      z-index: 1000;
     }
-
-    .npc-card img {
-      width: 100%;
-      max-width: 150px;
-      height: auto;
+    #quest-modal > div {
+      background: #2e1a32;
+      padding: 20px;
       border-radius: 10px;
-      margin-bottom: 10px;
+      width: 400px;
+      position: relative;
+    }
+    #quest-modal input, #quest-modal select {
+      width: 100%;
+      margin-bottom: 5px;
+      padding: 8px;
+      border: none;
+      border-radius: 4px;
     }
   </style>
 </head>
 <body>
   <div class="topnav">
     <button class="active" onclick="showSection('quest-tracker', this)">Quest Tracker</button>
-    <button onclick="showSection('npc-library', this)">NPC Library</button>
   </div>
   <div class="content" id="quest-tracker">
     <div class="sidebar">
@@ -210,187 +153,97 @@
         <div class="tab" onclick="switchTab('completed')">Completed</div>
         <div class="tab" onclick="switchTab('failed')">Failed</div>
       </div>
+      <!-- FILTER UI -->
+      <div style="margin-bottom: 10px;">
+        <select id="priority-filter" onchange="renderQuests()" style="width: 100%; margin-bottom: 5px;">
+          <option value="">All Priorities</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <select id="type-filter" onchange="renderQuests()" style="width: 100%;">
+          <option value="">All Types</option>
+          <option value="Personal">Personal</option>
+          <option value="Party">Party</option>
+        </select>
+      </div>
       <ul class="quest-list" id="quest-list"></ul>
-<button onclick="showAddQuestForm()" style="margin-top: 20px; width: 100%; padding: 10px; background: #4e2d3a; color: white; border: none; border-radius: 4px; cursor: pointer;">➕ Add Quest</button>
-<div id="add-quest-form" style="display:none; margin-top: 10px;">
-  <input type="text" id="quest-title" placeholder="Title" style="width:100%; margin-bottom: 5px;" />
-  <input type="text" id="quest-lead" placeholder="Lead" style="width:100%; margin-bottom: 5px;" />
-  <input type="text" id="quest-giver" placeholder="Giver" style="width:100%; margin-bottom: 5px;" />
-  <input type="text" id="quest-type" placeholder="Type (Personal/Party)" style="width:100%; margin-bottom: 5px;" />
-  <input type="text" id="quest-location" placeholder="Location" style="width:100%; margin-bottom: 5px;" />
-  <input type="text" id="quest-time" placeholder="Time Remaining" style="width:100%; margin-bottom: 5px;" />
-  <input type="text" id="quest-notes" placeholder="Notes" style="width:100%; margin-bottom: 5px;" />
-  <input type="text" id="quest-reward" placeholder="Reward" style="width:100%; margin-bottom: 5px;" />
-  <select id="quest-priority" style="width:100%; margin-bottom: 5px;">
-    <option value="low">Low</option>
-    <option value="medium">Medium</option>
-    <option value="high">High</option>
-  </select>
-  <button onclick="addQuest()" style="width: 100%; padding: 8px; background: gold; color: black; font-weight: bold; border: none; border-radius: 4px;">Add</button>
-</div>
+      <button onclick="openModal()" style="margin-top: 20px; width: 100%; padding: 10px; background: #4e2d3a; color: white; border: none; border-radius: 4px; cursor: pointer;">➕ Add Quest</button>
     </div>
     <div class="main" id="quest-details">
       <div class="quest-title">Select a quest</div>
       <div class="quest-lead">Quest details will appear here.</div>
-      <div class="quest-meta">
-        <div><strong>Giver:</strong></div>
-        <div><strong>Type:</strong></div>
-        <div><strong>Location:</strong></div>
-        <div><strong>Time Remaining:</strong></div>
-        <div><strong>Notes:</strong></div>
-        <div><strong>Reward:</strong></div>
+      <div class="quest-meta"></div>
+      <div style="margin-top: 20px;">
+        <button onclick="editQuest()" style="padding: 8px 16px; margin-right: 10px; background: orange; border: none; border-radius: 4px; color: black;">✏️ Edit</button>
+        <button onclick="deleteQuest()" style="padding: 8px 16px; background: red; border: none; border-radius: 4px; color: white;">🗑️ Delete</button>
       </div>
     </div>
-<script>
-const questData = { active: [], completed: [], failed: [] };
-
-db.collection("quests").get().then(snapshot => {
-  snapshot.forEach(doc => {
-    const quest = doc.data();
-    if (quest.status && questData[quest.status]) {
-      questData[quest.status].push(quest);
-    }
-  });
-  renderQuests();
-});
-function renderQuests() {
-  const list = document.getElementById('quest-list');
-  list.innerHTML = '';
-
-  if (!questData[currentTab]) return;
-
-  questData[currentTab].forEach((quest, index) => {
-    const li = document.createElement('li');
-    li.innerText = quest.title;
-    li.classList.add(quest.priority);
-    li.onclick = () => selectQuest(index);
-    if (index === 0) li.classList.add('active');
-    list.appendChild(li);
-  });
-
-  if (questData[currentTab].length > 0) {
-    selectQuest(0);
-  } else {
-    document.querySelector('.quest-title').innerText = 'No quests available';
-    document.querySelector('.quest-lead').innerText = '';
-    document.querySelector('.quest-meta').innerHTML = '<div>-</div>'.repeat(6);
-  }
-}
-
-function selectQuest(index) {
-  const quest = questData[currentTab][index];
-  document.querySelector('.quest-title').innerText = quest.title;
-  document.querySelector('.quest-lead').innerText = quest.lead;
-  document.querySelector('.quest-meta').innerHTML = `
-    <div><strong>Giver:</strong> ${quest.giver}</div>
-    <div><strong>Type:</strong> ${quest.type}</div>
-    <div><strong>Location:</strong> ${quest.location}</div>
-    <div><strong>Time Remaining:</strong> ${quest.time}</div>
-    <div><strong>Notes:</strong> ${quest.notes}</div>
-    <div><strong>Reward:</strong> ${quest.reward}</div>
-  `;
-
-  const listItems = document.querySelectorAll('.quest-list li');
-  listItems.forEach((li, i) => {
-    li.classList.toggle('active', i === index);
-  });
-}
-
-function switchTab(tabName) {
-  currentTab = tabName;
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.classList.remove('active');
-  });
-  const tabIndex = ['active', 'completed', 'failed'].indexOf(tabName);
-  if (tabIndex !== -1) {
-    document.querySelector(`.tab:nth-child(${tabIndex + 1})`).classList.add('active');
-  }
-  renderQuests();
-}
-
-let currentTab = 'active';
-function showAddQuestForm() {
-  const form = document.getElementById('add-quest-form');
-  form.style.display = form.style.display === 'none' ? 'block' : 'none';
-}
-
-function addQuest() {
-  const newQuest = {
-    title: document.getElementById('quest-title').value,
-    lead: document.getElementById('quest-lead').value,
-    giver: document.getElementById('quest-giver').value,
-    type: document.getElementById('quest-type').value,
-    location: document.getElementById('quest-location').value,
-    time: document.getElementById('quest-time').value,
-    notes: document.getElementById('quest-notes').value,
-    reward: document.getElementById('quest-reward').value,
-    priority: document.getElementById('quest-priority').value,
-    status: 'active'
-  };
-
-  db.collection("quests").add(newQuest).then(() => {
-    alert("Quest added!");
-    location.reload();
-  });
-}
-
-window.onload = renderQuests;
-</script>
-
-        </div>
-      </div>
-<!-- ... rest of the code remains the same ... -->
   </div>
-  <div class="content" id="npc-library" style="display:none; flex-direction: column;">
-    <div class="npc-tabs">
-      <button class="active" onclick="showNpcSection('thornemere', this)">Thornemere</button>
-      <button onclick="showNpcSection('west-eldenreach', this)">West Eldenreach</button>
-    </div>
-    <div class="npc-search">
-      <input type="text" placeholder="Search NPCs..." onkeyup="filterNPCs(this.value)">
-    </div>
-    <div id="thornemere" class="npc-section" style="display: block;">
-      <h2>Thornemere</h2>
-      <div class="npc-tile-container">
-        <div class="npc-card">
-          <img src="npc1.jpg" alt="Miri Roux">
-          <span class="npc-name">Miri Roux</span>
-        </div>
-      </div>
-    </div>
-    <div id="west-eldenreach" class="npc-section" style="display: none;">
-      <h2>West Eldenreach</h2>
-      <div class="npc-tile-container">
-        <div class="npc-card">
-          <img src="npc2.jpg" alt="Gideon Ghostshroud">
-          <span class="npc-name">Gideon Ghostshroud</span>
-        </div>
-      </div>
+
+  <!-- MODAL -->
+  <div id="quest-modal">
+    <div>
+      <h2 style="margin-top:0; color:gold;" id="modal-title">Add/Edit Quest</h2>
+      <input type="text" id="quest-title" placeholder="Title" />
+      <input type="text" id="quest-lead" placeholder="Lead" />
+      <input type="text" id="quest-giver" placeholder="Giver" />
+      <input type="text" id="quest-type" placeholder="Type (Personal/Party)" />
+      <input type="text" id="quest-location" placeholder="Location" />
+      <input type="text" id="quest-time" placeholder="Time Remaining" />
+      <input type="text" id="quest-notes" placeholder="Notes" />
+      <input type="text" id="quest-reward" placeholder="Reward" />
+      <select id="quest-priority">
+        <option value="low">Low</option>
+        <option value="medium">Medium</option>
+        <option value="high">High</option>
+      </select>
+      <button id="modal-submit-btn" style="width:100%; padding:8px; background: gold; color:black; font-weight:bold; border:none; border-radius:4px;">Save</button>
+      <button onclick="closeModal()" style="position:absolute; top:10px; right:10px; background:none; border:none; color:white; font-size:18px; cursor:pointer;">✖</button>
     </div>
   </div>
 
   <script>
-    function showSection(sectionId, button) {
-      document.getElementById('quest-tracker').style.display = sectionId === 'quest-tracker' ? 'flex' : 'none';
-      document.getElementById('npc-library').style.display = sectionId === 'npc-library' ? 'flex' : 'none';
-      document.querySelectorAll('.topnav button').forEach(btn => btn.classList.remove('active'));
-      button.classList.add('active');
-    }
+    const questData = { active: [], completed: [], failed: [] };
+    let currentTab = 'active';
+    let selectedQuestIndex = null;
+    let editingQuestId = null;
 
-    function showNpcSection(id, button) {
-      document.querySelectorAll('.npc-section').forEach(section => section.style.display = 'none');
-      document.getElementById(id).style.display = 'block';
-      document.querySelectorAll('.npc-tabs button').forEach(btn => btn.classList.remove('active'));
-      button.classList.add('active');
-    }
-
-    function filterNPCs(query) {
-      const lower = query.toLowerCase();
-      document.querySelectorAll('.npc-card').forEach(card => {
-        const name = card.querySelector('.npc-name').innerText.toLowerCase();
-        card.style.display = name.includes(lower) ? 'flex' : 'none';
+    db.collection("quests").get().then(snapshot => {
+      snapshot.forEach(doc => {
+        const quest = doc.data();
+        quest.id = doc.id;
+        if (quest.status && questData[quest.status]) {
+          questData[quest.status].push(quest);
+        }
       });
-    }
-  </script>
-</body>
-</html>
+      renderQuests();
+    });
+
+    function renderQuests() {
+      const list = document.getElementById('quest-list');
+      list.innerHTML = '';
+      if (!questData[currentTab]) return;
+
+      const priorityFilter = document.getElementById('priority-filter').value;
+      const typeFilter = document.getElementById('type-filter').value;
+
+      const filtered = questData[currentTab].filter(q => {
+        const matchesPriority = priorityFilter === '' || q.priority === priorityFilter;
+        const matchesType = typeFilter === '' || (q.type && q.type.toLowerCase() === typeFilter.toLowerCase());
+        return matchesPriority && matchesType;
+      });
+
+      filtered.forEach((quest, index) => {
+        const li = document.createElement('li');
+        li.innerText = quest.title;
+        li.classList.add(quest.priority);
+        li.onclick = () => selectQuest(index, filtered);
+        if (index === 0) li.classList.add('active');
+        list.appendChild(li);
+      });
+
+      if (filtered.length > 0) {
+        selectQuest(0, filtered);
+      } else {
+        document.querySelector('.quest-title').innerText = 'No quests match the filt
