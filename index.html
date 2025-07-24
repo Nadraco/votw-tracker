@@ -6,6 +6,7 @@
   <title>VOTW Tracker</title>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <style>
   * {
     box-sizing: border-box;
@@ -278,8 +279,8 @@
     <button class="active" onclick="switchSection('quest-tracker', this)">Quest Tracker</button>
     <button onclick="switchSection('npc-library', this)">NPC Library</button>
   </div>
-
-  <!-- QUEST TRACKER -->
+  
+   <!-- QUEST TRACKER -->
   <div id="quest-tracker" class="content active">
     <div class="sidebar">
       <div class="tabs">
@@ -314,17 +315,6 @@
     </div>
   </div>
 
-  <!-- NPC LIBRARY -->
-  <div id="npc-library" class="content">
-    <div class="sidebar">
-      <div class="npc-tabs" id="country-buttons"></div>
-      <div class="npc-search">
-        <input type="text" placeholder="Search NPCs..." oninput="searchNPCs(this.value)" />
-      </div>
-    </div>
-    <div class="main" id="npc-container"></div>
-  </div>
-
   <!-- QUEST MODAL -->
   <div id="quest-modal">
     <div>
@@ -351,353 +341,454 @@
       <button id="modal-submit-btn">Save Quest</button>
     </div>
   </div>
-<script>
-  function switchSection(sectionId, button) {
-    document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-    document.getElementById(sectionId).classList.add('active');
-    document.querySelectorAll('.topnav button').forEach(btn => btn.classList.remove('active'));
-    button.classList.add('active');
-  }
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDxSKU85aMBBL6jNvHiaihnWA-vApp-dVk",
-    authDomain: "votw-tracker.firebaseapp.com",
-    projectId: "votw-tracker",
-    storageBucket: "votw-tracker.appspot.com",
-    messagingSenderId: "554314433668",
-    appId: "1:554314433668:web:9818e708d793dcfad2eed1"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+	  <!-- NPC LIBRARY -->
+	<div id="npc-library" class="content">
+	  <div class="sidebar">
+		<div class="npc-tabs" id="country-buttons"></div>
+		<div class="npc-search">
+		  <input type="text" placeholder="Search NPCs..." oninput="searchNPCs(this.value)" />
 
-  let questData = { active: [], completed: [], failed: [] };
-  let currentTab = 'active';
-  let selectedQuestIndex = null;
-  let draggedQuest = null;
-  let draggedFromStatus = null;
+		  <input type="file" id="npc-image-upload" accept="image/*" style="margin-top: 10px;" />
 
-  function switchTab(tabName) {
-    currentTab = tabName;
-    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-    document.querySelector(`.tab:nth-child(${['active','completed','failed'].indexOf(tabName)+1})`).classList.add('active');
-    renderQuests();
-  }
+		  <!-- Country Dropdown -->
+		  <select id="npc-country-select" onchange="populateRegionSelect()" style="margin-top: 10px;">
+			<option value="">-- Select Country --</option>
+		  </select>
 
-  function renderQuests() {
-    const list = document.getElementById('quest-list');
-    list.innerHTML = '';
-    const priorityFilter = document.getElementById('priority-filter').value;
-    const typeFilter = document.getElementById('type-filter').value;
-    const filtered = questData[currentTab].filter(q =>
-      (!priorityFilter || q.priority === priorityFilter) &&
-      (!typeFilter || (q.type && q.type.toLowerCase() === typeFilter.toLowerCase()))
-    );
+		  <!-- Region Dropdown -->
+		  <select id="npc-region-select" disabled style="margin-top: 10px;">
+			<option value="">-- Select Region --</option>
+		  </select>
 
-    filtered.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+		  <!-- NPC Name -->
+		  <input type="text" id="npc-name-input" placeholder="NPC Name" style="margin-top: 10px;" />
 
-    filtered.forEach((quest, index) => {
-      const li = document.createElement('li');
-      li.innerText = quest.title;
-      li.classList.add(quest.priority);
-      li.setAttribute('draggable', 'true');
-      li.dataset.index = index;
+		  <!-- Upload Button -->
+		  <button onclick="uploadNPCImage()" style="margin-top: 10px;">Upload Image</button>
+		</div>
+	  </div>
+	  <div class="main" id="npc-container"></div>
+	</div>
+ 
+	<script>
+	// Firebase + Supabase Initialization, Quest Tracker Logic, Modal, NPC Upload, NPC Display
 
-      li.addEventListener('dragstart', handleDragStart);
-      li.addEventListener('dragover', handleDragOver);
-      li.addEventListener('drop', handleDrop);
-      li.addEventListener('dragend', handleDragEnd);
+	// Supabase init
+	const supabase = window.supabase.createClient(
+	  'https://jdaelzxmjpcbyzcgfwzr.supabase.co',
+	  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkYWVsenhtanBjYnl6Y2dmd3pyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMzOTA2MDQsImV4cCI6MjA2ODk2NjYwNH0.7yDlBMJxoaJCjn4eD7ydRQAKgTu1UaneAAv2unGnuVc'
+	);
 
-      li.onclick = () => selectQuest(index, filtered);
-      if (index === 0) li.classList.add('active');
-      list.appendChild(li);
-    });
+	// Firebase init
+	firebase.initializeApp({
+	  apiKey: "AIzaSyDxSKU85aMBBL6jNvHiaihnWA-vApp-dVk",
+	  authDomain: "votw-tracker.firebaseapp.com",
+	  projectId: "votw-tracker",
+	  storageBucket: "votw-tracker.appspot.com",
+	  messagingSenderId: "554314433668",
+	  appId: "1:554314433668:web:9818e708d793dcfad2eed1"
+	});
 
-    if (filtered.length > 0) {
-      selectQuest(0, filtered);
-    } else {
-      document.querySelector('.quest-title').innerText = 'No quests match the filters';
-      document.querySelector('.quest-lead').innerText = '';
-      document.querySelector('.quest-meta').innerHTML = '<div>-</div>'.repeat(6);
-    }
-  }
+	const db = firebase.firestore();
 
-  function handleDragStart(e) {
-    const index = parseInt(e.target.dataset.index);
-    draggedQuest = questData[currentTab][index];
-    draggedFromStatus = currentTab;
-    e.dataTransfer.effectAllowed = 'move';
-    e.target.style.opacity = '0.5';
-  }
+	let questData = { active: [], completed: [], failed: [] };
+	let currentTab = 'active';
+	let selectedQuestIndex = null;
+	let draggedQuest = null;
+	let draggedFromStatus = null;
 
-  function handleDragOver(e) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  }
+	function switchTab(tabName) {
+	  currentTab = tabName;
+	  document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+	  document.querySelector(`.tab:nth-child(${['active','completed','failed'].indexOf(tabName)+1})`).classList.add('active');
+	  renderQuests();
+	}
+	
+	function switchSection(sectionId, button) {
+	document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+	document.getElementById(sectionId).classList.add('active');
 
-  function handleDrop(e) {
-    e.preventDefault();
-    const targetIndex = parseInt(e.target.dataset.index);
-    const targetList = questData[currentTab];
+	document.querySelectorAll('.topnav button').forEach(btn => btn.classList.remove('active'));
+	button.classList.add('active');
+	}
 
-    // Remove from original list
-    const fromList = questData[draggedFromStatus];
-    const oldIndex = fromList.findIndex(q => q.id === draggedQuest.id);
-    if (oldIndex > -1) fromList.splice(oldIndex, 1);
+	function renderQuests() {
+	  const list = document.getElementById('quest-list');
+	  list.innerHTML = '';
+	  const priorityFilter = document.getElementById('priority-filter').value;
+	  const typeFilter = document.getElementById('type-filter').value;
+	  const filtered = questData[currentTab].filter(q =>
+		(!priorityFilter || q.priority === priorityFilter) &&
+		(!typeFilter || (q.type && q.type.toLowerCase() === typeFilter.toLowerCase()))
+	  );
 
-    // Update status
-    draggedQuest.status = currentTab;
-    targetList.splice(targetIndex, 0, draggedQuest);
+	  filtered.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
-    // Update sortOrder in target tab
-    targetList.forEach((q, idx) => {
-      q.sortOrder = idx;
-      db.collection("quests").doc(q.id).update({
-        status: q.status,
-        sortOrder: idx
-      });
-    });
+	  filtered.forEach((quest, index) => {
+		const li = document.createElement('li');
+		li.innerText = quest.title;
+		li.classList.add(quest.priority);
+		li.setAttribute('draggable', 'true');
+		li.dataset.index = index;
 
-    // Update sortOrder in original tab
-    fromList.forEach((q, idx) => {
-      q.sortOrder = idx;
-      db.collection("quests").doc(q.id).update({
-        sortOrder: idx
-      });
-    });
+		li.addEventListener('dragstart', handleDragStart);
+		li.addEventListener('dragover', handleDragOver);
+		li.addEventListener('drop', handleDrop);
+		li.addEventListener('dragend', handleDragEnd);
 
-    renderQuests();
-  }
+		li.onclick = () => selectQuest(index, filtered);
+		if (index === 0) li.classList.add('active');
+		list.appendChild(li);
+	  });
 
-  function handleDragEnd(e) {
-    e.target.style.opacity = '';
-    draggedQuest = null;
-    draggedFromStatus = null;
-  }
+	  if (filtered.length > 0) {
+		selectQuest(0, filtered);
+	  } else {
+		document.querySelector('.quest-title').innerText = 'No quests match the filters';
+		document.querySelector('.quest-lead').innerText = '';
+		document.querySelector('.quest-meta').innerHTML = '<div>-</div>'.repeat(6);
+	  }
+	}
 
-  function selectQuest(index, data) {
-    selectedQuestIndex = index;
-    const quest = data[index];
-    document.querySelector('.quest-title').innerText = quest.title;
-    document.querySelector('.quest-lead').innerText = quest.lead;
-    document.querySelector('.quest-meta').innerHTML = `
-      <div><strong>Giver:</strong> ${quest.giver}</div>
-      <div><strong>Type:</strong> ${quest.type}</div>
-      <div><strong>Location:</strong> ${quest.location}</div>
-      <div><strong>Time Remaining:</strong> ${quest.time}</div>
-      <div><strong>Notes:</strong> ${quest.notes}</div>
-      <div><strong>Reward:</strong> ${quest.reward}</div>
-    `;
-    document.querySelectorAll('.quest-list li').forEach((li, i) => li.classList.toggle('active', i === index));
-  }
+	function handleDragStart(e) {
+	  const index = parseInt(e.target.dataset.index);
+	  draggedQuest = questData[currentTab][index];
+	  draggedFromStatus = currentTab;
+	  e.dataTransfer.effectAllowed = 'move';
+	  e.target.style.opacity = '0.5';
+	}
 
-  function openModal(mode = 'add', quest = null) {
-    const modal = document.getElementById('quest-modal');
-    const modalHeader = document.getElementById('modal-header');
+	function handleDragOver(e) {
+	  e.preventDefault();
+	  e.dataTransfer.dropEffect = 'move';
+	}
 
-    document.getElementById('modal-title-input').value = quest ? quest.title : '';
-    document.getElementById('modal-lead-input').value = quest ? quest.lead : '';
-    document.getElementById('modal-giver-input').value = quest ? quest.giver : '';
-    document.getElementById('modal-type-input').value = quest ? quest.type : '';
-    document.getElementById('modal-location-input').value = quest ? quest.location : '';
-    document.getElementById('modal-time-input').value = quest ? quest.time : '';
-    document.getElementById('modal-notes-input').value = quest ? quest.notes : '';
-    document.getElementById('modal-reward-input').value = quest ? quest.reward : '';
-    document.getElementById('modal-priority-select').value = quest ? quest.priority : 'low';
-    document.getElementById('modal-status-select').value = quest ? quest.status : 'active';
+	function handleDrop(e) {
+	  e.preventDefault();
+	  const targetIndex = parseInt(e.target.dataset.index);
+	  const targetList = questData[currentTab];
 
-    modalHeader.innerText = mode === 'edit' ? 'Edit Quest' : 'Add Quest';
-    modal.style.display = 'flex';
+	  // Remove from original list
+	  const fromList = questData[draggedFromStatus];
+	  const oldIndex = fromList.findIndex(q => q.id === draggedQuest.id);
+	  if (oldIndex > -1) fromList.splice(oldIndex, 1);
 
-    document.getElementById('modal-submit-btn').onclick = function() {
-      const newQuest = {
-        title: document.getElementById('modal-title-input').value,
-        lead: document.getElementById('modal-lead-input').value,
-        giver: document.getElementById('modal-giver-input').value,
-        type: document.getElementById('modal-type-input').value,
-        location: document.getElementById('modal-location-input').value,
-        time: document.getElementById('modal-time-input').value,
-        notes: document.getElementById('modal-notes-input').value,
-        reward: document.getElementById('modal-reward-input').value,
-        priority: document.getElementById('modal-priority-select').value,
-        status: document.getElementById('modal-status-select').value,
-        sortOrder: questData[document.getElementById('modal-status-select').value]?.length || 0
-      };
-      if (!newQuest.title.trim()) {
-        alert("Title is required.");
-        return;
-      }
-      if (mode === 'edit' && quest && quest.id) {
-        db.collection("quests").doc(quest.id).set(newQuest).then(() => {
-          alert("Quest updated!");
-          closeModal();
-          location.reload();
-        });
-      } else {
-        db.collection("quests").add(newQuest).then(() => {
-          alert("Quest added!");
-          closeModal();
-          location.reload();
-        });
-      }
-    };
-  }
+	  // Update status
+	  draggedQuest.status = currentTab;
+	  targetList.splice(targetIndex, 0, draggedQuest);
 
-  function closeModal(){
-    document.getElementById('quest-modal').style.display = 'none';
-  }
+	  // Update sortOrder in target tab
+	  targetList.forEach((q, idx) => {
+		q.sortOrder = idx;
+		db.collection("quests").doc(q.id).update({
+		  status: q.status,
+		  sortOrder: idx
+		});
+	  });
 
-  function editQuest() {
-    if (selectedQuestIndex === null) return;
-    openModal('edit', questData[currentTab][selectedQuestIndex]);
-  }
+	  // Update sortOrder in original tab
+	  fromList.forEach((q, idx) => {
+		q.sortOrder = idx;
+		db.collection("quests").doc(q.id).update({
+		  sortOrder: idx
+		});
+	  });
 
-  function deleteQuest() {
-    const quest = questData[currentTab][selectedQuestIndex];
-    if (confirm(`Delete quest "${quest.title}"?`)) {
-      db.collection("quests").doc(quest.id).delete().then(() => {
-        alert("Quest deleted!");
-        location.reload();
-      });
-    }
-  }
+	  renderQuests();
+	}
 
-db.collection("quests").onSnapshot(snapshot => {
-  // Clear old data
-  questData = { active: [], completed: [], failed: [] };
+	function handleDragEnd(e) {
+	  e.target.style.opacity = '';
+	  draggedQuest = null;
+	  draggedFromStatus = null;
+	}
 
-  snapshot.forEach(doc => {
-    const quest = doc.data();
-    quest.id = doc.id;
-    if (quest.sortOrder === undefined) quest.sortOrder = 0;
-    if (quest.status && questData[quest.status]) {
-      questData[quest.status].push(quest);
-    }
-  });
+	function selectQuest(index, data) {
+	  selectedQuestIndex = index;
+	  const quest = data[index];
+	  document.querySelector('.quest-title').innerText = quest.title;
+	  document.querySelector('.quest-lead').innerText = quest.lead;
+	  document.querySelector('.quest-meta').innerHTML = `
+		<div><strong>Giver:</strong> ${quest.giver}</div>
+		<div><strong>Type:</strong> ${quest.type}</div>
+		<div><strong>Location:</strong> ${quest.location}</div>
+		<div><strong>Time Remaining:</strong> ${quest.time}</div>
+		<div><strong>Notes:</strong> ${quest.notes}</div>
+		<div><strong>Reward:</strong> ${quest.reward}</div>
+	  `;
+	  document.querySelectorAll('.quest-list li').forEach((li, i) =>
+		li.classList.toggle('active', i === index)
+	  );
+	}
 
-  renderQuests();
-});
+	function openModal(mode = 'add', quest = null) {
+	  const modal = document.getElementById('quest-modal');
+	  document.getElementById('modal-header').innerText = mode === 'edit' ? 'Edit Quest' : 'Add Quest';
 
-  const npcs = [
-    { name: 'Sally', country: 'Shattered Isles', region: 'Quillport', image: 'https://via.placeholder.com/150?text=Nyx' },
-    { name: 'Anathea Dusksense', country: 'Thornmere', region: 'Fernwick Village', image: 'https://via.placeholder.com/150?text=Liora' },
-    { name: 'Diana Daerith', country: 'Shattered Isles', region: 'Luminara', image: 'https://via.placeholder.com/150?text=Thorne' },
-    { name: 'Miri Roux', country: 'Thornmere', region: 'Rafflesian Wilds', image: 'https://via.placeholder.com/150?text=Liora' },
-  ];
+	  document.getElementById('modal-title-input').value = quest?.title || '';
+	  document.getElementById('modal-lead-input').value = quest?.lead || '';
+	  document.getElementById('modal-giver-input').value = quest?.giver || '';
+	  document.getElementById('modal-type-input').value = quest?.type || '';
+	  document.getElementById('modal-location-input').value = quest?.location || '';
+	  document.getElementById('modal-time-input').value = quest?.time || '';
+	  document.getElementById('modal-notes-input').value = quest?.notes || '';
+	  document.getElementById('modal-reward-input').value = quest?.reward || '';
+	  document.getElementById('modal-priority-select').value = quest?.priority || 'low';
+	  document.getElementById('modal-status-select').value = quest?.status || 'active';
 
-  const npcContainer = document.getElementById('npc-container');
-  const countryButtons = document.getElementById('country-buttons');
-  const countries = [...new Set(npcs.map(n => n.country))];
-  let activeCountry = countries[0];
-  let searchQuery = '';
+	  modal.style.display = 'flex';
 
-  function renderCountryButtons() {
-    countryButtons.innerHTML = '';
-    countries.forEach(country => {
-      const btn = document.createElement('button');
-      btn.innerText = country;
-      btn.className = country === activeCountry ? 'active' : '';
-      btn.onclick = () => {
-        activeCountry = country;
-        renderNPCs();
-        renderCountryButtons();
-      };
-      countryButtons.appendChild(btn);
-    });
-  }
+	  document.getElementById('modal-submit-btn').onclick = function () {
+		const newQuest = {
+		  title: document.getElementById('modal-title-input').value.trim(),
+		  lead: document.getElementById('modal-lead-input').value.trim(),
+		  giver: document.getElementById('modal-giver-input').value.trim(),
+		  type: document.getElementById('modal-type-input').value.trim(),
+		  location: document.getElementById('modal-location-input').value.trim(),
+		  time: document.getElementById('modal-time-input').value.trim(),
+		  notes: document.getElementById('modal-notes-input').value.trim(),
+		  reward: document.getElementById('modal-reward-input').value.trim(),
+		  priority: document.getElementById('modal-priority-select').value,
+		  status: document.getElementById('modal-status-select').value,
+		  sortOrder: questData[document.getElementById('modal-status-select').value]?.length || 0,
+		};
 
-  function renderNPCs() {
-    npcContainer.innerHTML = '';
-    const filtered = npcs.filter(n =>
-      n.country === activeCountry &&
-      n.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+		if (!newQuest.title) return alert("Title is required.");
 
-    const groupedByRegion = {};
-    filtered.forEach(npc => {
-      if (!groupedByRegion[npc.region]) groupedByRegion[npc.region] = [];
-      groupedByRegion[npc.region].push(npc);
-    });
+		if (mode === 'edit' && quest?.id) {
+		  db.collection("quests").doc(quest.id).set(newQuest).then(() => {
+			alert("Quest updated!");
+			closeModal();
+		  });
+		} else {
+		  db.collection("quests").add(newQuest).then(() => {
+			alert("Quest added!");
+			closeModal();
+		  });
+		}
+	  };
+	}
 
-    Object.keys(groupedByRegion).sort().forEach(region => {
-      const regionDiv = document.createElement('div');
-      regionDiv.className = 'region';
+	function closeModal() {
+	  document.getElementById('quest-modal').style.display = 'none';
+	}
 
-      const title = document.createElement('h3');
-      title.innerText = region;
-      title.onclick = () => {
-        content.classList.toggle('active');
-      };
+	function editQuest() {
+	  if (selectedQuestIndex === null) return;
+	  openModal('edit', questData[currentTab][selectedQuestIndex]);
+	}
 
-      const content = document.createElement('div');
-      content.className = 'region-content';
+	function deleteQuest() {
+	  const quest = questData[currentTab][selectedQuestIndex];
+	  if (!quest) return;
+	  if (confirm(`Delete quest "${quest.title}"?`)) {
+		db.collection("quests").doc(quest.id).delete().then(() => {
+		  alert("Deleted.");
+		  renderQuests();
+		});
+	  }
+	}
 
-      const container = document.createElement('div');
-      container.className = 'npc-tile-container';
+	db.collection("quests").onSnapshot(snapshot => {
+	  questData = { active: [], completed: [], failed: [] };
+	  snapshot.forEach(doc => {
+		const quest = doc.data();
+		quest.id = doc.id;
+		if (!quest.status) return;
+		if (!questData[quest.status]) return;
+		questData[quest.status].push(quest);
+	  });
+	  renderQuests();
+	});
 
-      groupedByRegion[region].sort((a, b) => a.name.localeCompare(b.name)).forEach(npc => {
-        const card = document.createElement('div');
-        card.className = 'npc-card';
-        card.innerHTML = `
-          <img src="${npc.image}" alt="${npc.name}" />
-          <div class="npc-name">${npc.name}</div>
-        `;
-        container.appendChild(card);
-      });
-
-      content.appendChild(container);
-      regionDiv.appendChild(title);
-      regionDiv.appendChild(content);
-      npcContainer.appendChild(regionDiv);
-    });
-  }
-
-  function searchNPCs(query) {
-    searchQuery = query.toLowerCase();
-    renderNPCs();
-  }
-
-  renderCountryButtons();
-  renderNPCs();
-  
-	// Enable drop on status tabs
+	// Dragging between status tabs
 	document.querySelectorAll('.tab').forEach(tab => {
-	tab.addEventListener('dragover', e => {
-    e.preventDefault();
-    tab.classList.add('drag-over');
-	});
+	  tab.addEventListener('dragover', e => {
+		e.preventDefault();
+		tab.classList.add('drag-over');
+	  });
 
-	tab.addEventListener('dragleave', () => {
-    tab.classList.remove('drag-over');
-	});
+	  tab.addEventListener('dragleave', () => {
+		tab.classList.remove('drag-over');
+	  });
 
-	tab.addEventListener('drop', e => {
-	e.preventDefault();
-    tab.classList.remove('drag-over');
+	  tab.addEventListener('drop', e => {
+		e.preventDefault();
+		tab.classList.remove('drag-over');
+		const newStatus = tab.textContent.trim().toLowerCase();
+		if (!draggedQuest || newStatus === draggedQuest.status) return;
 
-    const newStatus = tab.textContent.trim().toLowerCase();
-    if (!draggedQuest || !newStatus || newStatus === draggedQuest.status) return;
+		const fromList = questData[draggedQuest.status];
+		const oldIndex = fromList.findIndex(q => q.id === draggedQuest.id);
+		if (oldIndex > -1) fromList.splice(oldIndex, 1);
 
-    // Remove from original list
-    const fromList = questData[draggedQuest.status];
-    const oldIndex = fromList.findIndex(q => q.id === draggedQuest.id);
-    if (oldIndex > -1) fromList.splice(oldIndex, 1);
+		draggedQuest.status = newStatus;
+		draggedQuest.sortOrder = questData[newStatus].length;
+		questData[newStatus].push(draggedQuest);
 
-    // Add to new status list
-    draggedQuest.status = newStatus;
-    draggedQuest.sortOrder = questData[newStatus].length;
-    questData[newStatus].push(draggedQuest);
-
-    db.collection("quests").doc(draggedQuest.id).update({
-      status: newStatus,
-      sortOrder: draggedQuest.sortOrder
+		db.collection("quests").doc(draggedQuest.id).update({
+		  status: newStatus,
+		  sortOrder: draggedQuest.sortOrder
 		});
 
 		renderQuests();
 		switchTab(newStatus);
-		});
+	  });
 	});
-</script>
+		let npcs = [
+	  { name: 'Sally', country: 'Shattered Isles', region: 'Quillport', image: 'https://via.placeholder.com/150?text=Sally' },
+	  { name: 'Diana Daerith', country: 'Shattered Isles', region: 'Luminara', image: 'https://via.placeholder.com/150?text=Diana' },
+	  { name: 'Anathea Dusksense', country: 'Thornmere', region: 'Fernwick Village', image: 'https://via.placeholder.com/150?text=Anathea' },
+	  { name: 'Miri Roux', country: 'Thornmere', region: 'Rafflesian Wilds', image: 'https://via.placeholder.com/150?text=Miri' },
+	];
 
+	const npcContainer = document.getElementById('npc-container');
+	const countryButtons = document.getElementById('country-buttons');
+	let activeCountry = npcs.length ? npcs[0].country : '';
+	let searchQuery = '';
 
+	function renderCountryButtons() {
+	  const countries = [...new Set(npcs.map(n => n.country))];
+	  countryButtons.innerHTML = '';
+	  countries.forEach(country => {
+		const btn = document.createElement('button');
+		btn.textContent = country;
+		btn.className = country === activeCountry ? 'active' : '';
+		btn.onclick = () => {
+		  activeCountry = country;
+		  renderCountryButtons();
+		  renderNPCs();
+		};
+		countryButtons.appendChild(btn);
+	  });
+	}
+
+	function renderNPCs() {
+	  npcContainer.innerHTML = '';
+	  const filtered = npcs.filter(n =>
+		n.country === activeCountry &&
+		n.name.toLowerCase().includes(searchQuery)
+	  );
+
+	  const grouped = {};
+	  filtered.forEach(npc => {
+		if (!grouped[npc.region]) grouped[npc.region] = [];
+		grouped[npc.region].push(npc);
+	  });
+
+	  Object.keys(grouped).sort().forEach(region => {
+		const regionDiv = document.createElement('div');
+		regionDiv.className = 'region';
+
+		const title = document.createElement('h3');
+		title.textContent = region;
+		title.onclick = () => {
+		  content.classList.toggle('active');
+		};
+
+		const content = document.createElement('div');
+		content.className = 'region-content active';
+
+		const grid = document.createElement('div');
+		grid.className = 'npc-tile-container';
+
+		grouped[region].sort((a, b) => a.name.localeCompare(b.name)).forEach(npc => {
+		  const card = document.createElement('div');
+		  card.className = 'npc-card';
+		  card.innerHTML = `
+			<img src="${npc.image}" alt="${npc.name}" />
+			<div class="npc-name">${npc.name}</div>
+		  `;
+		  grid.appendChild(card);
+		});
+
+		content.appendChild(grid);
+		regionDiv.appendChild(title);
+		regionDiv.appendChild(content);
+		npcContainer.appendChild(regionDiv);
+	  });
+	}
+
+	function searchNPCs(query) {
+	  searchQuery = query.toLowerCase();
+	  renderNPCs();
+	}
+
+	function populateCountrySelect() {
+	  const select = document.getElementById('npc-country-select');
+	  const countries = [...new Set(npcs.map(n => n.country))].sort();
+	  select.innerHTML = `<option value="">-- Select Country --</option>`;
+	  countries.forEach(country => {
+		const opt = document.createElement('option');
+		opt.value = country;
+		opt.textContent = country;
+		select.appendChild(opt);
+	  });
+	}
+
+	function populateRegionSelect() {
+	  const country = document.getElementById('npc-country-select').value;
+	  const select = document.getElementById('npc-region-select');
+	  if (!country) {
+		select.innerHTML = '<option value="">-- Select Region --</option>';
+		select.disabled = true;
+		return;
+	  }
+	  const regions = [...new Set(npcs.filter(n => n.country === country).map(n => n.region))].sort();
+	  select.innerHTML = '<option value="">-- Select Region --</option>';
+	  regions.forEach(region => {
+		const opt = document.createElement('option');
+		opt.value = region;
+		opt.textContent = region;
+		select.appendChild(opt);
+	  });
+	  select.disabled = false;
+	}
+
+	async function uploadNPCImage() {
+	  const file = document.getElementById('npc-image-upload').files[0];
+	  const country = document.getElementById('npc-country-select').value.trim();
+	  const region = document.getElementById('npc-region-select').value.trim();
+	  const name = document.getElementById('npc-name-input').value.trim();
+
+	  if (!file || !country || !region || !name) {
+		alert("Please complete all fields.");
+		return;
+	  }
+
+	  const path = `${country}/${region}/${Date.now()}_${file.name}`.replace(/\s+/g, '_');
+
+	  const { error } = await supabase
+		.storage
+		.from('npc-images')
+		.upload(path, file);
+
+		if (error) {
+		  console.error("Upload failed:", error.message);
+		  alert("Upload failed: " + error.message);
+		  return;
+		}
+
+	  const { data: urlData } = supabase
+		.storage
+		.from('npc-images')
+		.getPublicUrl(path);
+
+	  const imageUrl = urlData?.publicUrl || '';
+
+	  npcs.push({ name, country, region, image: imageUrl });
+
+	  renderCountryButtons();
+	  renderNPCs();
+	  populateCountrySelect();
+	  alert("NPC Image uploaded!");
+	}
+
+	renderCountryButtons();
+	renderNPCs();
+	populateCountrySelect();
+
+	</script>
 </body>
 </html>
