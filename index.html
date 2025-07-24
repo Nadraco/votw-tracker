@@ -636,16 +636,29 @@
 		switchTab(newStatus);
 	  });
 	});
-		let npcs = [
-	  { name: 'Sally', country: 'Shattered Isles', region: 'Quillport', image: 'https://via.placeholder.com/150?text=Sally' },
-	  { name: 'Diana Daerith', country: 'Shattered Isles', region: 'Luminara', image: 'https://via.placeholder.com/150?text=Diana' },
-	  { name: 'Anathea Dusksense', country: 'Thornmere', region: 'Fernwick Village', image: 'https://via.placeholder.com/150?text=Anathea' },
-	  { name: 'Miri Roux', country: 'Thornmere', region: 'Rafflesian Wilds', image: 'https://via.placeholder.com/150?text=Miri' },
-	];
+
+	let npcs = [];
+
+	async function fetchNPCs() {
+	  const { data, error } = await supabase.from('npcs').select('*');
+	  if (error) {
+		console.error("Failed to load NPCs:", error);
+		return;
+	  }
+	  npcs = data;
+	  
+		if (data.length > 0) {
+		activeCountry = data[0].country;
+		}
+		
+	  renderCountryButtons();
+	  renderNPCs();
+	  populateCountrySelect();
+	}
 
 	const npcContainer = document.getElementById('npc-container');
 	const countryButtons = document.getElementById('country-buttons');
-	let activeCountry = npcs.length ? npcs[0].country : '';
+	let activeCountry = '';
 	let searchQuery = '';
 
 	function renderCountryButtons() {
@@ -697,7 +710,7 @@
 		  const card = document.createElement('div');
 		  card.className = 'npc-card';
 		  card.innerHTML = `
-			<img src="${npc.image}" alt="${npc.name}" />
+			<img src="${npc.image_url}" alt="${npc.name}" />
 			<div class="npc-name">${npc.name}</div>
 		  `;
 		  grid.appendChild(card);
@@ -777,17 +790,34 @@
 
 	  const imageUrl = urlData?.publicUrl || '';
 
-	  npcs.push({ name, country, region, image: imageUrl });
+	  await supabase.from('npcs').insert([{
+		name,
+		country,
+		region,
+		image_url: imageUrl
+		}]);
+
+		// Fetch updated list
+		await fetchNPCs();
 
 	  renderCountryButtons();
 	  renderNPCs();
 	  populateCountrySelect();
+	  
+	  //Clear Form
+	  document.getElementById('npc-image-upload').value = '';
+	  document.getElementById('npc-country-select').value = '';
+	  document.getElementById('npc-region-select').innerHTML = '<option value="">-- Select Region --</option>';
+	  document.getElementById('npc-region-select').disabled = true;
+	  document.getElementById('npc-name-input').value = '';
 	  alert("NPC Image uploaded!");
 	}
 
 	renderCountryButtons();
 	renderNPCs();
 	populateCountrySelect();
+
+	fetchNPCs(); 
 
 	</script>
 </body>
