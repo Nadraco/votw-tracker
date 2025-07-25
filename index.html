@@ -243,6 +243,33 @@
     font-size: 14px;
   }
 
+	#quest-details {
+	  font-size: 16px;
+	  line-height: 1.5;
+	  padding: 40px;
+	}
+	
+	#quest-details > div > button.icon-button {
+		margin-right: 8px;
+	}
+
+	.quest-title {
+	  font-size: 32px; /* bigger title */
+	  margin-bottom: 20px;
+	}
+
+	.quest-lead {
+	  font-size: 20px;
+	  margin-bottom: 16px;
+	  color: #ddd;
+	}
+
+	.quest-meta div {
+	  font-size: 16px;
+	  margin-bottom: 12px;
+	  color: #ccc;
+	}
+
   /* Modal */
   #quest-modal {
     display: none;
@@ -470,10 +497,10 @@
       <div class="quest-title">Select a quest</div>
       <div class="quest-lead">Quest details will appear here.</div>
       <div class="quest-meta"></div>
-      <div style="margin-top: 20px;">
-        <button onclick="editQuest()" style="padding: 8px 16px; margin-right: 10px; background: orange; border: none; border-radius: 4px; color: black;">✏️ Edit</button>
-        <button onclick="deleteQuest()" style="padding: 8px 16px; background: red; border: none; border-radius: 4px; color: white;">🗑️ Delete</button>
-      </div>
+		<div style="margin-top: 20px;">
+		  <button onclick="editQuest()" class="icon-button" title="Edit Quest">✏️</button>
+		  <button onclick="deleteQuest()" class="icon-button" title="Delete Quest">🗑️</button>
+		</div>
     </div>
   </div>
 
