@@ -189,7 +189,7 @@
   }
   .npc-tile-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 16px;
   }
   .npc-card {
@@ -204,7 +204,7 @@
   }
   .npc-card img {
     width: 100%;
-    max-width: 120px;
+    max-width: 300px;
     height: auto;
     border-radius: 8px;
     margin-bottom: 8px;
@@ -271,6 +271,138 @@
     color: white;
     cursor: pointer;
   }
+	.npc-search input,
+	.npc-search select,
+	.npc-search button {
+	  width: 100%;
+	  padding: 10px;
+	  border-radius: 6px;
+	  border: none;
+	  background-color: #1f0f1a;
+	  color: white;
+	  font-size: 14px;
+	  margin-bottom: 12px;
+	}
+
+	.npc-search label {
+	  display: block;
+	  color: #d2c6ca;
+	  margin-bottom: 4px;
+	  font-size: 13px;
+	}
+
+	.npc-search h3 {
+	  font-size: 16px;
+	  font-weight: bold;
+	  color: gold;
+	  margin-bottom: 12px;
+	}
+	
+	.file-upload-wrapper {
+	  position: relative;
+	  margin-bottom: 12px;
+	}
+
+	.file-upload-wrapper input[type="file"] {
+	  opacity: 0;
+	  position: absolute;
+	  top: 0; left: 0;
+	  width: 100%;
+	  height: 100%;
+	  cursor: pointer;
+	  z-index: 1; /* ensure label gets hover */
+	}
+
+	.file-upload-wrapper label.gold-button {
+	  z-index: 2;
+	  position: relative;
+	}
+
+	.gold-button {
+	  display: inline-block;
+	  width: 100%;
+	  padding: 10px;
+	  background: gold;
+	  color: black;
+	  font-weight: bold;
+	  border-radius: 6px;
+	  font-size: 15px;
+	  font-family: 'Segoe UI', sans-serif;
+	  text-align: center;
+	  cursor: pointer;
+	  transition: background 0.2s ease;
+	  border: none;
+	}
+	
+	.gold-button:hover {
+	  background: #f1c40f;
+	}
+	
+	.file-upload-wrapper {
+	  position: relative;
+	  margin-bottom: 12px;
+	}
+
+	.file-upload-wrapper input[type="file"] {
+	  opacity: 0;
+	  position: absolute;
+	  top: 0;
+	  left: 0;
+	  width: 100%;
+	  height: 100%;
+	  cursor: pointer;
+	  z-index: 2;
+	}
+
+	.file-upload-wrapper .file-label {
+	  position: relative;
+	  z-index: 1;
+	  display: inline-block;
+	  width: 100%;
+	  padding: 10px;
+	  background: gold;
+	  color: black;
+	  font-weight: bold;
+	  border-radius: 6px;
+	  font-size: 15px;
+	  font-family: 'Segoe UI', sans-serif;
+	  text-align: center;
+	  cursor: pointer;
+	  transition: background 0.2s ease;
+	  border: none;
+	}
+
+	.file-upload-wrapper .file-label:hover {
+	  background: #f1c40f;
+	}
+	
+	.file-upload-wrapper .file-label {
+	  white-space: nowrap;
+	  overflow: hidden;
+	  text-overflow: ellipsis;
+	}
+	
+	.npc-status {
+	  font-size: 13px;
+	  color: #ccc; /* This stays the same for "Status:" */
+	  margin-top: 4px;
+	}
+
+	.status-text.alive {
+	  color: lightgreen;
+	  font-weight: bold;
+	}
+
+	.status-text.dead {
+	  color: red;
+	  font-weight: bold;
+	}
+
+	.status-text.unknown {
+	  color: #aaa;
+	  font-weight: bold;
+	}
+}
 </style>
 
 </head>
@@ -346,27 +478,65 @@
 	<div id="npc-library" class="content">
 	  <div class="sidebar">
 		<div class="npc-tabs" id="country-buttons"></div>
+		
+		
 		<div class="npc-search">
-		  <input type="text" placeholder="Search NPCs..." oninput="searchNPCs(this.value)" />
+		  <h3 style="color: gold; margin-bottom: 10px;">Library Controls</h3>
 
-		  <input type="file" id="npc-image-upload" accept="image/*" style="margin-top: 10px;" />
+		  <!-- Search -->
+		  <input
+			type="text"
+			placeholder="🔍 Search NPCs by name..."
+			oninput="searchNPCs(this.value)"
+			style="margin-bottom: 12px;"
+		  />
 
-		  <!-- Country Dropdown -->
-		  <select id="npc-country-select" onchange="populateRegionSelect()" style="margin-top: 10px;">
-			<option value="">-- Select Country --</option>
+		  <!-- Status Filter -->
+		  <label for="npc-status-filter" style="margin-bottom: 6px; font-size: 14px;">Filter by Status</label>
+		  <select id="npc-status-filter" onchange="renderNPCs()" style="margin-bottom: 12px;">
+			<option value="">All</option>
+			<option value="alive">Alive</option>
+			<option value="dead">Dead</option>
+			<option value="unknown">Unknown</option>
 		  </select>
 
-		  <!-- Region Dropdown -->
-		  <select id="npc-region-select" disabled style="margin-top: 10px;">
-			<option value="">-- Select Region --</option>
-		  </select>
-
+		  <h3 style="color: gold; margin-bottom: 10px;">NPC Upload</h3>
 		  <!-- NPC Name -->
-		  <input type="text" id="npc-name-input" placeholder="NPC Name" style="margin-top: 10px;" />
+		  <label for="npc-name-input" style="margin-bottom: 6px; font-size: 14px;">NPC Name</label>
+		  <input type="text" id="npc-name-input" placeholder="Enter NPC Name" style="margin-bottom: 12px;" />
+
+		  <!-- Country -->
+		  <label for="npc-country-select" style="margin-bottom: 6px; font-size: 14px;">Country</label>
+		  <select id="npc-country-select" onchange="populateRegionSelect()" style="margin-bottom: 12px;">
+			<option value="">Select Country</option>
+		  </select>
+
+		  <!-- Region -->
+		  <label for="npc-region-select" style="margin-bottom: 6px; font-size: 14px;">Region</label>
+		  <select id="npc-region-select" disabled style="margin-bottom: 12px;">
+			<option value="">Select Region</option>
+		  </select>
+
+		  <!-- Status -->
+		  <label for="npc-status-select" style="margin-bottom: 6px; font-size: 14px;">Status</label>
+		  <select id="npc-status-select" style="margin-bottom: 12px;">
+			<option value="Alive">Alive</option>
+			<option value="Dead">Dead</option>
+			<option value="Unknown" selected>Unknown</option>
+		  </select>
+
+		  <!-- Choose Image -->
+		  <div class="file-upload-wrapper" style="margin-bottom: 14px;">
+			<label for="npc-image-upload" class="gold-button file-label" id="file-label">Choose Image</label>
+			<input type="file" id="npc-image-upload" onchange="displayFileName(this)" />
+		  </div>
 
 		  <!-- Upload Button -->
-		  <button onclick="uploadNPCImage()" style="margin-top: 10px;">Upload Image</button>
+		  <button onclick="uploadNPCImage()" class="gold-button">Upload NPC</button>
 		</div>
+
+		
+		
 	  </div>
 	  <div class="main" id="npc-container"></div>
 	</div>
@@ -391,7 +561,7 @@
 	});
 
 	const db = firebase.firestore();
-
+	
 	let questData = { active: [], completed: [], failed: [] };
 	let currentTab = 'active';
 	let selectedQuestIndex = null;
@@ -638,19 +808,25 @@
 	});
 
 	let npcs = [];
-
+	let activeCountry = '';
+	
 	async function fetchNPCs() {
 	  const { data, error } = await supabase.from('npcs').select('*');
+
 	  if (error) {
 		console.error("Failed to load NPCs:", error);
 		return;
 	  }
+
+	  console.log("✅ NPCs fetched:", data); // optional debug
+
 	  npcs = data;
-	  
-		if (data.length > 0) {
+
+	  if (data.length > 0) {
 		activeCountry = data[0].country;
-		}
-		
+	  }
+
+	  // ✅ These must go here, after `npcs = data`
 	  renderCountryButtons();
 	  renderNPCs();
 	  populateCountrySelect();
@@ -658,16 +834,17 @@
 
 	const npcContainer = document.getElementById('npc-container');
 	const countryButtons = document.getElementById('country-buttons');
-	let activeCountry = '';
 	let searchQuery = '';
 
 	function renderCountryButtons() {
 	  const countries = [...new Set(npcs.map(n => n.country))];
 	  countryButtons.innerHTML = '';
+
 	  countries.forEach(country => {
 		const btn = document.createElement('button');
 		btn.textContent = country;
 		btn.className = country === activeCountry ? 'active' : '';
+		btn.disabled = !!searchQuery; // ✅ Disable during search
 		btn.onclick = () => {
 		  activeCountry = country;
 		  renderCountryButtons();
@@ -679,10 +856,15 @@
 
 	function renderNPCs() {
 	  npcContainer.innerHTML = '';
-	  const filtered = npcs.filter(n =>
-		n.country === activeCountry &&
-		n.name.toLowerCase().includes(searchQuery)
-	  );
+
+	  // ✅ If searching, ignore activeCountry. Otherwise, filter by it.
+		const statusFilter = document.getElementById('npc-status-filter').value;
+
+		const filtered = npcs.filter(n =>
+		  (!searchQuery || n.name.toLowerCase().includes(searchQuery)) &&
+		  (!searchQuery && n.country !== activeCountry ? false : true) &&
+		  (!statusFilter || (n.status || 'unknown').toLowerCase() === statusFilter)
+		);
 
 	  const grouped = {};
 	  filtered.forEach(npc => {
@@ -705,14 +887,20 @@
 
 		const grid = document.createElement('div');
 		grid.className = 'npc-tile-container';
-
+		
 		grouped[region].sort((a, b) => a.name.localeCompare(b.name)).forEach(npc => {
 		  const card = document.createElement('div');
 		  card.className = 'npc-card';
+
+		  const status = npc.status?.toLowerCase() || 'unknown';
+		  const statusDisplay = status.charAt(0).toUpperCase() + status.slice(1);
+
 		  card.innerHTML = `
 			<img src="${npc.image_url}" alt="${npc.name}" />
 			<div class="npc-name">${npc.name}</div>
+			<div class="npc-status">Status: <span class="status-text ${status}">${statusDisplay}</span></div>
 		  `;
+
 		  grid.appendChild(card);
 		});
 
@@ -731,8 +919,12 @@
 	function populateCountrySelect() {
 	  const select = document.getElementById('npc-country-select');
 	  const countries = [...new Set(npcs.map(n => n.country))].sort();
-	  select.innerHTML = `<option value="">-- Select Country --</option>`;
+	  
+	  console.log("🌍 Countries detected for dropdown:", countries);
+	  
+	  select.innerHTML = `<option value="">Select Country</option>`;
 	  countries.forEach(country => {
+	    console.log("⬇ Adding option:", country);  // 👈 Add this
 		const opt = document.createElement('option');
 		opt.value = country;
 		opt.textContent = country;
@@ -744,12 +936,12 @@
 	  const country = document.getElementById('npc-country-select').value;
 	  const select = document.getElementById('npc-region-select');
 	  if (!country) {
-		select.innerHTML = '<option value="">-- Select Region --</option>';
+		select.innerHTML = '<option value="">Select Region</option>';
 		select.disabled = true;
 		return;
 	  }
 	  const regions = [...new Set(npcs.filter(n => n.country === country).map(n => n.region))].sort();
-	  select.innerHTML = '<option value="">-- Select Region --</option>';
+	  select.innerHTML = '<option value="">Select Region</option>';
 	  regions.forEach(region => {
 		const opt = document.createElement('option');
 		opt.value = region;
@@ -764,6 +956,7 @@
 	  const country = document.getElementById('npc-country-select').value.trim();
 	  const region = document.getElementById('npc-region-select').value.trim();
 	  const name = document.getElementById('npc-name-input').value.trim();
+	  const status = document.getElementById('npc-status-select').value.trim();
 
 	  if (!file || !country || !region || !name) {
 		alert("Please complete all fields.");
@@ -794,31 +987,36 @@
 		name,
 		country,
 		region,
-		image_url: imageUrl
+		image_url: imageUrl,
+		status
 		}]);
-
-		// Fetch updated list
-		await fetchNPCs();
-
-	  renderCountryButtons();
-	  renderNPCs();
-	  populateCountrySelect();
-	  
+ 
 	  //Clear Form
 	  document.getElementById('npc-image-upload').value = '';
 	  document.getElementById('npc-country-select').value = '';
-	  document.getElementById('npc-region-select').innerHTML = '<option value="">-- Select Region --</option>';
+	  document.getElementById('npc-region-select').innerHTML = '<option value="">Select Region</option>';
 	  document.getElementById('npc-region-select').disabled = true;
 	  document.getElementById('npc-name-input').value = '';
+	  document.getElementById('npc-status-select').value = 'Unknown';
 	  alert("NPC Image uploaded!");
 	}
 
-	renderCountryButtons();
-	renderNPCs();
-	populateCountrySelect();
+	//renderCountryButtons();
+	//renderNPCs();
+	//populateCountrySelect();
 
-	fetchNPCs(); 
+	document.addEventListener('DOMContentLoaded', () => {
+	fetchNPCs(); // ← this must run after DOM is ready
+	});
 
+	function displayFileName(input) {
+	  const label = document.getElementById('file-label');
+	  if (input.files.length > 0) {
+		label.textContent = `File: ${input.files[0].name}`;
+	  } else {
+		label.textContent = 'Choose Image';
+	  }
+	}
 	</script>
 </body>
 </html>
