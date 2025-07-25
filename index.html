@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>VOTW Tracker</title>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  
 <style>
   * {
     box-sizing: border-box;
@@ -192,16 +194,42 @@
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 16px;
   }
-  .npc-card {
-    background: #1f0f1a;
-    padding: 12px;
-    border-radius: 8px;
-    text-align: center;
-    transition: 0.2s;
-  }
-  .npc-card:hover {
-    background: #281624;
-  }
+	.npc-card {
+	  position: relative;
+	  background: #1f0f1a;
+	  padding: 12px;
+	  border-radius: 8px;
+	  text-align: center;
+	  transition: 0.2s;
+	}
+	
+	
+	.npc-actions {
+	  position: absolute;
+	  top: 6px;
+	  right: 6px;
+	  display: flex;
+	  gap: 4px;
+	}
+	
+	.icon-button {
+	  background: #3e2337;
+	  color: white;
+	  border: none;
+	  border-radius: 4px;
+	  padding: 4px 6px;
+	  font-size: 14px;
+	  cursor: pointer;
+	  transition: background 0.2s ease;
+	}
+
+	.icon-button:hover {
+	  background: #5a2b49;
+	}
+	
+	.npc-card:hover {
+		background: #281624;
+	}
   .npc-card img {
     width: 100%;
     max-width: 300px;
@@ -408,12 +436,14 @@
 </head>
 <body>
   <div class="topnav">
-    <button class="active" onclick="switchSection('quest-tracker', this)">Quest Tracker</button>
+	<button onclick="switchSection('quest-tracker', this)">
+	
+	Quest Tracker</button>
     <button onclick="switchSection('npc-library', this)">NPC Library</button>
   </div>
   
    <!-- QUEST TRACKER -->
-  <div id="quest-tracker" class="content active">
+	<div id="quest-tracker" class="content">
     <div class="sidebar">
       <div class="tabs">
         <div class="tab active" onclick="switchTab('active')">Active</div>
@@ -510,12 +540,14 @@
 		  <select id="npc-country-select" onchange="populateRegionSelect()" style="margin-bottom: 12px;">
 			<option value="">Select Country</option>
 		  </select>
+		  <input type="text" id="npc-new-country" placeholder="Or add new country" />
 
 		  <!-- Region -->
 		  <label for="npc-region-select" style="margin-bottom: 6px; font-size: 14px;">Region</label>
 		  <select id="npc-region-select" disabled style="margin-bottom: 12px;">
 			<option value="">Select Region</option>
 		  </select>
+		  <input type="text" id="npc-new-region" placeholder="Or add new region" />
 
 		  <!-- Status -->
 		  <label for="npc-status-select" style="margin-bottom: 6px; font-size: 14px;">Status</label>
@@ -541,6 +573,34 @@
 	  <div class="main" id="npc-container"></div>
 	</div>
  
+		<!-- NPC Edit Modal -->
+		<div id="npc-edit-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); justify-content:center; align-items:center; z-index:1000;">
+		  <div style="background:#2e1a32; padding:24px; border-radius:10px; width:400px; position:relative; display:flex; flex-direction:column;">
+			<button onclick="closeNPCEditModal()" style="position:absolute; top:10px; right:12px; background:none; border:none; color:white; font-size:20px;">&times;</button>
+			<h2 style="color:gold; margin-bottom:16px;">Edit NPC</h2>
+
+			<input type="text" id="edit-npc-name" placeholder="Name" style="margin-bottom:10px;" />
+			
+			<select id="edit-npc-country" onchange="populateEditRegion()" style="margin-bottom:10px;"></select>
+			<select id="edit-npc-region" style="margin-bottom:10px;"></select>
+			<select id="edit-npc-status" style="margin-bottom:10px;">
+			  <option value="Alive">Alive</option>
+			  <option value="Dead">Dead</option>
+			  <option value="Unknown">Unknown</option>
+			</select>
+
+			<!-- Styled image upload -->
+			<div class="file-upload-wrapper" style="margin-bottom:14px;">
+			  <label for="edit-npc-image-upload" class="gold-button file-label" id="edit-file-label">Choose New Image</label>
+			  <input type="file" id="edit-npc-image-upload" onchange="displayEditFileName(this)" />
+			</div>
+
+			<div id="current-image-url" style="color:#ccc; font-size:12px; word-break:break-all;"></div>
+
+			<button onclick="submitNPCEdit()" class="gold-button">Update NPC</button>
+		  </div>
+		</div>
+
 	<script>
 	// Firebase + Supabase Initialization, Quest Tracker Logic, Modal, NPC Upload, NPC Display
 
@@ -570,18 +630,22 @@
 
 	function switchTab(tabName) {
 	  currentTab = tabName;
+	  localStorage.setItem('questTab', tabName); //Save to localStorage
+
 	  document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
 	  document.querySelector(`.tab:nth-child(${['active','completed','failed'].indexOf(tabName)+1})`).classList.add('active');
 	  renderQuests();
 	}
 	
-	function switchSection(sectionId, button) {
-	document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-	document.getElementById(sectionId).classList.add('active');
+		function switchSection(sectionId, button) {
+		  localStorage.setItem('activeSection', sectionId); //Save to localStorage
 
-	document.querySelectorAll('.topnav button').forEach(btn => btn.classList.remove('active'));
-	button.classList.add('active');
-	}
+		  document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+		  document.getElementById(sectionId).classList.add('active');
+
+		  document.querySelectorAll('.topnav button').forEach(btn => btn.classList.remove('active'));
+		  button.classList.add('active');
+		}
 
 	function renderQuests() {
 	  const list = document.getElementById('quest-list');
@@ -809,122 +873,51 @@
 
 	let npcs = [];
 	let activeCountry = '';
+	let searchQuery = '';
+	const npcContainer = document.getElementById('npc-container');
+	const countryButtons = document.getElementById('country-buttons');
 	
+	function capitalizeWords(str) {
+		return str.replace(/\b\w/g, c => c.toUpperCase());
+	}
+
 	async function fetchNPCs() {
-	  const { data, error } = await supabase.from('npcs').select('*');
+	  const { data, error } = await supabase
+		.from('npcs')
+		.select('id, name, country, region, image_url, status');
 
 	  if (error) {
 		console.error("Failed to load NPCs:", error);
 		return;
 	  }
 
-	  console.log("✅ NPCs fetched:", data); // optional debug
-
 	  npcs = data;
+	  
+		// Sort NPCs A-Z by name (case-insensitive)
+	  npcs.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
 
-	  if (data.length > 0) {
-		activeCountry = data[0].country;
-	  }
-
-	  // ✅ These must go here, after `npcs = data`
-	  renderCountryButtons();
-	  renderNPCs();
-	  populateCountrySelect();
-	}
-
-	const npcContainer = document.getElementById('npc-container');
-	const countryButtons = document.getElementById('country-buttons');
-	let searchQuery = '';
-
-	function renderCountryButtons() {
+	  // Set activeCountry only if not set or invalid
 	  const countries = [...new Set(npcs.map(n => n.country))];
-	  countryButtons.innerHTML = '';
 
-	  countries.forEach(country => {
-		const btn = document.createElement('button');
-		btn.textContent = country;
-		btn.className = country === activeCountry ? 'active' : '';
-		btn.disabled = !!searchQuery; // ✅ Disable during search
-		btn.onclick = () => {
-		  activeCountry = country;
-		  renderCountryButtons();
-		  renderNPCs();
-		};
-		countryButtons.appendChild(btn);
-	  });
-	}
-
-	function renderNPCs() {
-	  npcContainer.innerHTML = '';
-
-	  // ✅ If searching, ignore activeCountry. Otherwise, filter by it.
-		const statusFilter = document.getElementById('npc-status-filter').value;
-
-		const filtered = npcs.filter(n =>
-		  (!searchQuery || n.name.toLowerCase().includes(searchQuery)) &&
-		  (!searchQuery && n.country !== activeCountry ? false : true) &&
-		  (!statusFilter || (n.status || 'unknown').toLowerCase() === statusFilter)
-		);
-
-	  const grouped = {};
-	  filtered.forEach(npc => {
-		if (!grouped[npc.region]) grouped[npc.region] = [];
-		grouped[npc.region].push(npc);
-	  });
-
-	  Object.keys(grouped).sort().forEach(region => {
-		const regionDiv = document.createElement('div');
-		regionDiv.className = 'region';
-
-		const title = document.createElement('h3');
-		title.textContent = region;
-		title.onclick = () => {
-		  content.classList.toggle('active');
-		};
-
-		const content = document.createElement('div');
-		content.className = 'region-content active';
-
-		const grid = document.createElement('div');
-		grid.className = 'npc-tile-container';
-		
-		grouped[region].sort((a, b) => a.name.localeCompare(b.name)).forEach(npc => {
-		  const card = document.createElement('div');
-		  card.className = 'npc-card';
-
-		  const status = npc.status?.toLowerCase() || 'unknown';
-		  const statusDisplay = status.charAt(0).toUpperCase() + status.slice(1);
-
-		  card.innerHTML = `
-			<img src="${npc.image_url}" alt="${npc.name}" />
-			<div class="npc-name">${npc.name}</div>
-			<div class="npc-status">Status: <span class="status-text ${status}">${statusDisplay}</span></div>
-		  `;
-
-		  grid.appendChild(card);
-		});
-
-		content.appendChild(grid);
-		regionDiv.appendChild(title);
-		regionDiv.appendChild(content);
-		npcContainer.appendChild(regionDiv);
-	  });
-	}
-
-	function searchNPCs(query) {
-	  searchQuery = query.toLowerCase();
-	  renderNPCs();
+		if (!activeCountry || !countries.includes(activeCountry)) {
+		  const savedCountry = localStorage.getItem('activeCountry');
+		  if (savedCountry && countries.includes(savedCountry)) {
+			activeCountry = savedCountry;
+		  } else {
+			activeCountry = countries[0]; // fallback
+		  }
+		}
 	}
 
 	function populateCountrySelect() {
 	  const select = document.getElementById('npc-country-select');
 	  const countries = [...new Set(npcs.map(n => n.country))].sort();
 	  
-	  console.log("🌍 Countries detected for dropdown:", countries);
+	  console.log("Countries detected for dropdown:", countries);
 	  
 	  select.innerHTML = `<option value="">Select Country</option>`;
 	  countries.forEach(country => {
-	    console.log("⬇ Adding option:", country);  // 👈 Add this
+	    console.log("⬇ Adding option:", country);
 		const opt = document.createElement('option');
 		opt.value = country;
 		opt.textContent = country;
@@ -953,8 +946,12 @@
 
 	async function uploadNPCImage() {
 	  const file = document.getElementById('npc-image-upload').files[0];
-	  const country = document.getElementById('npc-country-select').value.trim();
-	  const region = document.getElementById('npc-region-select').value.trim();
+		const countrySelect = document.getElementById('npc-country-select').value.trim();
+		const countryInput = document.getElementById('npc-new-country').value.trim();
+		const regionSelect = document.getElementById('npc-region-select').value.trim();
+		const regionInput = document.getElementById('npc-new-region').value.trim();
+		const country = capitalizeWords(countryInput || countrySelect);
+		const region = capitalizeWords(regionInput || regionSelect);
 	  const name = document.getElementById('npc-name-input').value.trim();
 	  const status = document.getElementById('npc-status-select').value.trim();
 
@@ -983,31 +980,280 @@
 
 	  const imageUrl = urlData?.publicUrl || '';
 
-	  await supabase.from('npcs').insert([{
-		name,
-		country,
-		region,
-		image_url: imageUrl,
-		status
-		}]);
+		if (window.currentEditingNPC) {
+		  await supabase.from('npcs').update({
+			name,
+			country,
+			region,
+			image_url: imageUrl,
+			status
+		  }).eq('id', window.currentEditingNPC);
+
+		  window.currentEditingNPC = null;
+		  alert("NPC updated!");
+		} else {
+		  await supabase.from('npcs').insert([{
+			name,
+			country,
+			region,
+			image_url: imageUrl,
+			status
+		  }]);
+		  alert("NPC added!");
+		  await fetchNPCs();
+			populateCountrySelect();
+			renderCountryButtons();
+			renderNPCs();
+		}
  
 	  //Clear Form
 	  document.getElementById('npc-image-upload').value = '';
+	  document.getElementById('file-label').textContent = 'Choose Image';
 	  document.getElementById('npc-country-select').value = '';
 	  document.getElementById('npc-region-select').innerHTML = '<option value="">Select Region</option>';
 	  document.getElementById('npc-region-select').disabled = true;
 	  document.getElementById('npc-name-input').value = '';
 	  document.getElementById('npc-status-select').value = 'Unknown';
-	  alert("NPC Image uploaded!");
+	  //alert("NPC Image uploaded!");
 	}
 
-	//renderCountryButtons();
-	//renderNPCs();
-	//populateCountrySelect();
+		function editNPC(id) {
+		  const npc = npcs.find(n => n.id === id);
+		  if (!npc) return alert("NPC not found.");
 
-	document.addEventListener('DOMContentLoaded', () => {
-	fetchNPCs(); // ← this must run after DOM is ready
+		  // Store the ID globally
+		  window.currentEditingNPC = id;
+
+		  // Fill form fields
+		  document.getElementById('edit-npc-name').value = npc.name;
+		  document.getElementById('edit-npc-country').innerHTML = getCountryOptions(npc.country);
+		  populateEditRegion(npc.country, npc.region);
+		  document.getElementById('edit-npc-status').value = npc.status || 'Unknown';
+		  document.getElementById('npc-edit-modal').style.display = 'flex';
+		}
+
+		function getCountryOptions(selected) {
+		  const countries = [...new Set(npcs.map(n => n.country))].sort();
+		  return countries.map(c => `<option value="${c}" ${c === selected ? 'selected' : ''}>${c}</option>`).join('');
+		}
+
+		function populateEditRegion(country = null, selectedRegion = null) {
+		  const regionSelect = document.getElementById('edit-npc-region');
+		  const selectedCountry = country || document.getElementById('edit-npc-country').value;
+		  const regions = [...new Set(npcs.filter(n => n.country === selectedCountry).map(n => n.region))].sort();
+
+		  regionSelect.innerHTML = regions.map(r => `<option value="${r}" ${r === selectedRegion ? 'selected' : ''}>${r}</option>`).join('');
+		}
+		
+		async function submitNPCEdit() {
+		  const id = window.currentEditingNPC;
+		  const name = document.getElementById('edit-npc-name').value.trim();
+			const countryRaw = document.getElementById('edit-npc-country').value;
+			const regionRaw = document.getElementById('edit-npc-region').value;
+			const country = capitalizeWords(countryRaw);
+			const region = capitalizeWords(regionRaw);
+		  const status = document.getElementById('edit-npc-status').value;
+		  const file = document.getElementById('edit-npc-image-upload').files[0];
+
+		  if (!id || !name || !country || !region) {
+			return alert("Please complete all fields.");
+		  }
+
+		  let image_url = npcs.find(n => n.id === id)?.image_url || '';
+
+		  if (file) {
+			const path = `${country}/${region}/${Date.now()}_${file.name}`.replace(/\s+/g, '_');
+			const { error: uploadErr } = await supabase.storage.from('npc-images').upload(path, file);
+
+			if (uploadErr) {
+			  alert("Image upload failed.");
+			  return;
+			}
+
+			const { data } = supabase.storage.from('npc-images').getPublicUrl(path);
+			image_url = data.publicUrl;
+		  }
+
+		  const { error } = await supabase.from('npcs').update({
+			name, country, region, status, image_url
+		  }).eq('id', id);
+
+		  if (error) {
+			alert("Failed to update NPC.");
+			return;
+		  }
+
+		  // Refresh UI with new data
+		  await fetchNPCs();
+		  populateCountrySelect();
+		  renderCountryButtons();
+		  renderNPCs();
+
+		  // Now show alert and close modal
+		  alert("NPC updated!");
+		  closeNPCEditModal();
+		}
+
+		function closeNPCEditModal() {
+		  document.getElementById('npc-edit-modal').style.display = 'none';
+		  window.currentEditingNPC = null;
+		}
+
+	async function deleteNPC(id) {
+	  if (!confirm("Are you sure you want to delete this NPC?")) return;
+
+	  const { error } = await supabase.from('npcs').delete().eq('id', id);
+	  if (error) {
+		alert("Failed to delete NPC.");
+		return;
+	  }
+
+	  alert("NPC deleted.");
+	  // Explicitly refresh after delete
+	  await fetchNPCs();
+	  populateCountrySelect();
+	  renderCountryButtons();
+	  renderNPCs();
+	}
+
+	function switchSection(sectionId, button) {
+	  localStorage.setItem('activeSection', sectionId);
+
+	  document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+	  document.getElementById(sectionId)?.classList.add('active');
+
+	  document.querySelectorAll('.topnav button').forEach(btn => btn.classList.remove('active'));
+	  button?.classList.add('active');
+	}
+
+	function renderCountryButtons() {
+	  const countries = [...new Set(npcs.map(n => n.country))].sort();
+	  countryButtons.innerHTML = '';
+
+	  countries.forEach(country => {
+		const btn = document.createElement('button');
+		btn.textContent = country;
+		btn.classList.toggle('active', country === activeCountry);
+		btn.onclick = () => {
+		  activeCountry = country;
+		  localStorage.setItem('activeCountry', country);
+		  document.querySelectorAll('#country-buttons button').forEach(b => b.classList.remove('active'));
+		  btn.classList.add('active');
+		  renderNPCs();
+		};
+		countryButtons.appendChild(btn);
+	  });
+	}
+
+	function renderNPCs() {
+	  const statusFilter = document.getElementById('npc-status-filter').value.toLowerCase();
+	  const filtered = npcs.filter(n =>
+		(!searchQuery || n.name.toLowerCase().includes(searchQuery.toLowerCase())) &&
+		(!activeCountry || n.country === activeCountry) &&
+		(!statusFilter || (n.status || 'unknown').toLowerCase() === statusFilter)
+	  );
+
+	  npcContainer.innerHTML = '';
+
+	  const regions = [...new Set(filtered.map(n => n.region))].sort();
+
+	  regions.forEach(region => {
+		const regionDiv = document.createElement('div');
+		regionDiv.classList.add('region');
+
+		const title = document.createElement('h3');
+		title.textContent = region;
+		title.onclick = () => regionContent.classList.toggle('active');
+
+		const regionContent = document.createElement('div');
+		regionContent.classList.add('region-content', 'active');
+
+		const tileContainer = document.createElement('div');
+		tileContainer.classList.add('npc-tile-container');
+
+		filtered.filter(n => n.region === region).forEach(npc => {
+		  const card = document.createElement('div');
+		  card.classList.add('npc-card');
+
+		  const img = document.createElement('img');
+		  img.src = npc.image_url || '';
+		  img.alt = npc.name;
+
+		  const name = document.createElement('div');
+		  name.classList.add('npc-name');
+		  name.textContent = npc.name;
+
+		  const status = document.createElement('div');
+		  status.classList.add('npc-status');
+		  const statusText = document.createElement('span');
+		  statusText.classList.add('status-text', (npc.status || 'unknown').toLowerCase());
+		  statusText.textContent = npc.status || 'Unknown';
+		  status.innerHTML = `Status: `;
+		  status.appendChild(statusText);
+
+		  const actions = document.createElement('div');
+		  actions.classList.add('npc-actions');
+
+		  const editBtn = document.createElement('button');
+		  editBtn.classList.add('icon-button');
+		  editBtn.innerHTML = '✏️';
+		  editBtn.onclick = () => editNPC(npc.id);
+
+		  const deleteBtn = document.createElement('button');
+		  deleteBtn.classList.add('icon-button');
+		  deleteBtn.innerHTML = '🗑️';
+		  deleteBtn.onclick = () => deleteNPC(npc.id);
+
+		  actions.appendChild(editBtn);
+		  actions.appendChild(deleteBtn);
+
+		  card.appendChild(actions);
+		  card.appendChild(img);
+		  card.appendChild(name);
+		  card.appendChild(status);
+		  tileContainer.appendChild(card);
+		});
+
+		regionContent.appendChild(tileContainer);
+		regionDiv.appendChild(title);
+		regionDiv.appendChild(regionContent);
+		npcContainer.appendChild(regionDiv);
+	  });
+	}
+
+
+	document.addEventListener('DOMContentLoaded', async () => {
+	  const savedSection = localStorage.getItem('activeSection') || 'quest-tracker';
+	  const savedQuestTab = localStorage.getItem('questTab') || 'active';
+
+	  const button = [...document.querySelectorAll('.topnav button')]
+		.find(btn => btn.textContent.trim().toLowerCase().includes(savedSection.includes('npc') ? 'npc' : 'quest'));
+
+	  switchSection(savedSection, button);
+	  switchTab(savedQuestTab);
+
+	  await fetchNPCs();             //Get data
+	  populateCountrySelect();      //Fill dropdowns
+	  renderCountryButtons();       //Show buttons
+	  renderNPCs();                 //Show NPC cards
+	  
+	  	//Real Time Changes
+		supabase
+	  .from('npcs')
+	  .on('*', payload => {
+		console.log('Change received!', payload);
+		
+		// Refetch NPCs and rerender on any insert/update/delete
+		fetchNPCs().then(() => {
+		  populateCountrySelect();
+		  renderCountryButtons();
+		  renderNPCs();
+		});
+	  })
+	  .subscribe();
 	});
+
+
 
 	function displayFileName(input) {
 	  const label = document.getElementById('file-label');
@@ -1017,6 +1263,17 @@
 		label.textContent = 'Choose Image';
 	  }
 	}
+
+	function displayEditFileName(input) {
+	  const label = document.getElementById('edit-file-label');
+	  if (input.files.length > 0) {
+		label.textContent = `File: ${input.files[0].name}`;
+	  } else {
+		label.textContent = 'Choose New Image';
+	  }
+	}
+
 	</script>
 </body>
 </html>
+
