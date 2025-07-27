@@ -456,6 +456,47 @@
 	  font-weight: bold;
 	}
 	
+	.inventory-header {
+	  justify-content: space-between;
+	  align-items: right;
+	  padding: 0px 20px 10px 20px;
+	}
+
+	.inventory-header > .gold-box {
+	  margin-left: 10px;
+	}
+
+	.inventory-header h2 {
+	  color: gold;
+	  margin: 0;
+	}
+
+	.inventory-header input {
+	  width: 250px;
+	  padding: 10px;
+	  border-radius: 6px;
+	  background: #1f0f1a;
+	  color: white;
+	  border: none;
+	  font-size: 14px;
+	}
+	
+	.inventory-header h2 span {
+	  display: inline-block;
+	  width: 24px;
+	  text-align: center;
+	}
+
+	.inventory-header button {
+	  background: #4e2d3a;
+	  color: white;
+	  padding: 6px 12px;
+	  border: none;
+	  border-radius: 4px;
+	  font-size: 14px;
+	  cursor: pointer;
+	}
+	
 	#inventory-tab table th, #inventory-tab table td {
 	  padding: 6px;
 	  text-align: left;
@@ -497,44 +538,6 @@
 	  overflow: hidden;
 	}
 
-	.inventory-header {
-	  display: flex;
-	  justify-content: space-between;
-	  align-items: center;
-	  padding: 0 20px 10px 20px;
-	}
-
-	.inventory-header h2 {
-	  color: gold;
-	  margin: 0;
-	}
-
-	.inventory-header input {
-	  width: 250px;
-	  padding: 10px;
-	  border-radius: 6px;
-	  background: #1f0f1a;
-	  color: white;
-	  border: none;
-	  font-size: 14px;
-	}
-	
-	.inventory-header h2 span {
-	  display: inline-block;
-	  width: 24px;
-	  text-align: center;
-	}
-
-	.inventory-header button {
-	  background: #4e2d3a;
-	  color: white;
-	  padding: 6px 12px;
-	  border: none;
-	  border-radius: 4px;
-	  font-size: 14px;
-	  cursor: pointer;
-	}
-
 	.inventory-section .inventory-content {
 	  display: none;
 	  padding: 16px;
@@ -549,17 +552,21 @@
   .inventory-table th:nth-child(2),
   .inventory-table td:nth-child(2) { width: 5%; }  /* Qty */
   .inventory-table th:nth-child(3),
-  .inventory-table td:nth-child(3) { width: 15%; } /* Type */
+  .inventory-table td:nth-child(3) { width: 5%; }  /* Weight */
   .inventory-table th:nth-child(4),
-  .inventory-table td:nth-child(4) { width: 15%; } /* Rarity */
+  .inventory-table td:nth-child(4) { width: 5%; }  /* Value */
   .inventory-table th:nth-child(5),
-  .inventory-table td:nth-child(5) { width: 15%; } /* Attunement */
+  .inventory-table td:nth-child(5) { width: 15%; } /* Type */
   .inventory-table th:nth-child(6),
-  .inventory-table td:nth-child(6) { width: 10%; } /* Attuned */
+  .inventory-table td:nth-child(6) { width: 15%; } /* Rarity */
   .inventory-table th:nth-child(7),
-  .inventory-table td:nth-child(7) { width: 20%; } /* Notes */
+  .inventory-table td:nth-child(7) { width: 15%; } /* Attunement */
   .inventory-table th:nth-child(8),
-  .inventory-table td:nth-child(8) { width: 10%; white-space: nowrap; } /* Actions */
+  .inventory-table td:nth-child(8) { width: 10%; } /* Attuned */
+  .inventory-table th:nth-child(9),
+  .inventory-table td:nth-child(9) { width: 20%; } /* Notes */
+  .inventory-table th:nth-child(10),
+  .inventory-table td:nth-child(10) { width: 10%; white-space: nowrap; } /* Actions */
   
   .inventory-table.drag-over {
   outline: 2px dashed gold;
@@ -620,6 +627,34 @@
 	  padding: 0 6px;
 	  font-size: 16px;
 	}
+	
+	.npc-input {
+	  width: 100%;
+	  padding: 10px;
+	  border-radius: 6px;
+	  border: none;
+	  background-color: #1f0f1a;
+	  color: white;
+	  font-size: 14px;
+	  margin-bottom: 12px;
+	}
+	
+	/* Centered columns in inventory table */
+	.inventory-table th:nth-child(2),
+	.inventory-table td:nth-child(2),
+	.inventory-table th:nth-child(3),
+	.inventory-table td:nth-child(3),
+	.inventory-table th:nth-child(4),
+	.inventory-table td:nth-child(4),
+	.inventory-table th:nth-child(7),
+	.inventory-table td:nth-child(7),
+	.inventory-table th:nth-child(8),
+	.inventory-table td:nth-child(8),
+	.inventory-table th:nth-child(10),
+	.inventory-table td:nth-child(10) {
+	text-align: center;
+	vertical-align: middle;
+	}
 </style>
 
 </head>
@@ -628,7 +663,14 @@
 	<button onclick="switchSection('quest-tracker', this)">	Quest Tracker</button>
     <button onclick="switchSection('npc-library', this)">NPC Library</button>
 	<button onclick="switchSection('inventory-tab', this)">Inventory</button>
+	<button onclick="switchSection('business-tab', this)">Business</button>
   </div>
+  
+	<div id="business-tab" class="content">
+		  <h3 style="color: gold; padding-left: 30px;">Coming Soon!</h3>
+	</div>
+
+
   
    <!-- QUEST TRACKER -->
 	<div id="quest-tracker" class="content">
@@ -766,7 +808,7 @@
 			<button onclick="closeNPCEditModal()" style="position:absolute; top:10px; right:12px; background:none; border:none; color:white; font-size:20px;">&times;</button>
 			<h2 style="color:gold; margin-bottom:16px;">Edit NPC</h2>
 
-			<input type="text" id="edit-npc-name" placeholder="Name" style="margin-bottom:10px;" />
+			<input type="text" id="edit-npc-name" placeholder="Name" class="npc-input" />
 			
 			<select id="edit-npc-country" onchange="populateEditRegion()" style="margin-bottom:10px;"></select>
 			<select id="edit-npc-region" style="margin-bottom:10px;"></select>
@@ -787,21 +829,24 @@
 			<button onclick="submitNPCEdit()" class="gold-button">Update NPC</button>
 		  </div>
 		</div>
-			<div class="inventory-header">
-			  <h2>Inventory</h2>
+		<div id="inventory-tab" class="content">
+		<div class="main" style="width:100%; padding: 20px; display: flex; flex-direction: column; align-items: center;">
+	
+		    <!-- Search Bar -->
+			<div class="inventory-header" style="width: 100%; text-align: right; margin-bottom: 20px;">
 			  <input 
 				type="text" 
 				id="inventory-search" 
 				placeholder="🔍 Search items..." 
 				oninput="filterInventory(this.value)"
+				style="width: 40%; max-width: 400px; padding: 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px;"
 			  />
 			</div>
-		<div id="inventory-tab" class="content">
-
+			
 		  <div class="main" style="width:100%; padding: 20px;">
-			<div id="inventory-container"></div>
-		  </div>
-		</div>
+		<div id="inventory-container" style="width: 100%;"></div>
+	  </div>
+	</div>
 
 
 		<!-- INVENTORY MODAL -->
@@ -810,8 +855,11 @@
 			<button onclick="closeInventoryModal()" style="position:absolute; top:10px; right:12px; background:none; border:none; color:white; font-size:20px;">&times;</button>
 			<h2 style="color:gold; margin-bottom:16px;">Add Inventory Item</h2>
 
-			<input type="text" id="inv-item" placeholder="Item Name" style="margin-bottom:10px;" />
-			<input type="number" id="inv-qty" placeholder="Quantity" style="margin-bottom:10px;" />
+			<input type="text" id="inv-item" placeholder="Item Name" class="npc-input" />
+			<input type="number" id="inv-qty" placeholder="Quantity" class="npc-input" />
+			<input type="number" id="inv-weight" placeholder="Weight (lb)" class="npc-input" />
+			<input type="number" id="inv-value" placeholder="Value (gp)" class="npc-input" />
+			
 			<select id="inv-type" style="margin-bottom:10px; padding:8px; background:#3e2337; color:white; border:none; border-radius:4px;">
 			  <option value="">Select Type</option>
 			  <option>Adventuring Gear</option>
@@ -843,12 +891,10 @@
 			<label style="color:white; margin-bottom:6px;">
 			  <input type="checkbox" id="inv-attuned" style="margin-right:6px;" /> Attuned
 			</label>
-			<input type="text" id="inv-notes" placeholder="Notes" style="margin-bottom:12px;" />
+			<input type="text" id="inv-notes" placeholder="Notes" class="npc-input" />
 			<button class="gold-button" onclick="submitInventoryItem()">➕ Add Item</button>
 		  </div>
 		</div>
-
-
 	<script>
 	// Firebase + Supabase Initialization, Quest Tracker Logic, Modal, NPC Upload, NPC Display
 
@@ -1418,10 +1464,21 @@
 
 		const title = document.createElement('h3');
 		title.textContent = region;
-		title.onclick = () => regionContent.classList.toggle('active');
+		title.onclick = () => {
+		  regionContent.classList.toggle('active');
+
+		  // Save state
+		  const key = `region_${region}`;
+		  localStorage.setItem(key, regionContent.classList.contains('active') ? 'open' : 'closed');
+		};
+		
 
 		const regionContent = document.createElement('div');
-		regionContent.classList.add('region-content', 'active');
+		regionContent.classList.add('region-content');
+		const savedState = localStorage.getItem(`region_${region}`);
+		if (savedState === 'open' || savedState === null) {
+		  regionContent.classList.add('active');
+		}
 
 		const tileContainer = document.createElement('div');
 		tileContainer.classList.add('npc-tile-container');
@@ -1481,12 +1538,9 @@
 	  const savedSection = localStorage.getItem('activeSection') || 'quest-tracker';
 	  const savedQuestTab = localStorage.getItem('questTab') || 'active';
 
-	  const button = [...document.querySelectorAll('.topnav button')]
-		.find(btn => btn.textContent.trim().toLowerCase().includes(
-		  savedSection.includes('npc') ? 'npc' :
-		  savedSection.includes('inventory') ? 'inventory' :
-		  'quest'
-		));
+	const button = [...document.querySelectorAll('.topnav button')].find(btn =>
+	  btn.getAttribute('onclick')?.includes(savedSection)
+	);
 
 	  switchSection(savedSection, button); 
 	  switchTab(savedQuestTab); // Ensure quests show on load
@@ -1604,8 +1658,21 @@
 	}
 
 	function createInventorySection(name, items) {
-	  const section = document.createElement("section");
-	  section.className = "inventory-section open"; // initially open
+	
+		let totalWeight = 0;
+		let totalValue = 0;
+
+		items.forEach(item => {
+		  const qty = item.qty || 1;
+		  const weight = parseFloat(item.weight) || 0;
+		  const value = parseFloat(item.value) || 0;
+		  totalWeight += qty * weight;
+		  totalValue += qty * value;
+		});
+	
+		const section = document.createElement("section");
+		const isOpen = localStorage.getItem(`inventory_${name}`) !== 'closed';
+		section.className = `inventory-section ${isOpen ? 'open' : ''}`;
 	  section.id = `${name.trim().toLowerCase().replace(/\s+/g, '-')}-inventory`;
 	  
 	  // Header row with player name and button
@@ -1640,7 +1707,9 @@
 		// Toggle functionality
 		titleWrapper.onclick = () => {
 		  section.classList.toggle("open");
-		  toggleBtn.textContent = section.classList.contains("open") ? "⏷" : "⏵";
+		  const isOpen = section.classList.contains("open");
+		  toggleBtn.textContent = isOpen ? "⏷" : "⏵";
+		  localStorage.setItem(`inventory_${name}`, isOpen ? 'open' : 'closed');
 		};
 
 		// Add Item button
@@ -1659,7 +1728,7 @@
 	  const table = document.createElement("table");
 	  table.className = "inventory-table";
 
-		const headers = ["Item", "Qty", "Type", "Rarity", "Attunement", "Attuned", "Notes", "Actions"];
+		const headers = ["Item", "Qty", "Weight", "Value", "Type", "Rarity", "Attunement", "Attuned", "Notes", "Actions"];
 		const headerRow = document.createElement("tr");
 
 		headers.forEach((text, index) => {
@@ -1688,6 +1757,8 @@
 		const values = [
 		  item.item,
 		  item.qty,
+		  item.weight,
+		  item.value,
 		  item.type,
 		  item.rarity,
 		  item.attunement,
@@ -1805,11 +1876,27 @@
 			.single();
 		  goldValue.textContent = player?.gp ?? '0';
 		})();
+		
+		// Total Weight
+		const weightBox = document.createElement('div');
+		weightBox.className = 'gold-box';
+		weightBox.innerHTML = `
+		  <span class="gold-label">Weight:</span>
+		  <span class="gold-value" style="border-bottom: none;">${totalWeight.toFixed(2)} lb</span>`;
+
+		// Total Value
+		const valueBox = document.createElement('div');
+		valueBox.className = 'gold-box';
+		valueBox.innerHTML = `
+		  <span class="gold-label">Value:</span>
+		  <span class="gold-value" style="border-bottom: none;">${totalValue.toFixed(2)} gp</span>`;
 
 		goldBox.appendChild(goldLabel);
 		goldBox.appendChild(goldValue);
 		goldBox.appendChild(saveBtn);
 		header.appendChild(goldBox); // inserts into the top right of the inventory header
+		header.appendChild(weightBox);
+		header.appendChild(valueBox);
 	
 	  return section;
 	}
@@ -1835,6 +1922,8 @@
 	async function submitInventoryItem() {
 	  const item = document.getElementById('inv-item').value.trim();
 	  const qty = parseInt(document.getElementById('inv-qty').value) || 1;
+	  const weight = parseFloat(document.getElementById('inv-weight').value) || null;
+	  const value = parseFloat(document.getElementById('inv-value').value) || null;
 	  const type = document.getElementById('inv-type').value.trim();
 	  const rarity = document.getElementById('inv-rarity').value.trim();
 	  const attunement = document.getElementById('inv-attunement').value.trim();
@@ -1852,7 +1941,7 @@
 	  if (editingItemId) {
 		// Update existing item
 		({ error } = await supabase.from('inventory')
-		  .update({ player: currentInventoryPlayer, item, qty, type, rarity, attunement, attuned, notes })
+		  .update({ player: currentInventoryPlayer, item, qty, weight, value, type, rarity, attunement, attuned, notes })
 		  .eq('id', editingItemId));
 		document.getElementById('inventory-modal').dataset.editingItemId = '';
 	  } else {
@@ -1885,6 +1974,8 @@
 	  currentInventoryPlayer = item.player;
 	  document.getElementById('inv-item').value = item.item || '';
 	  document.getElementById('inv-qty').value = item.qty || 1;
+	  document.getElementById('inv-weight').value = item.weight || '';
+	  document.getElementById('inv-value').value = item.value || '';
 	  document.getElementById('inv-type').value = item.type || '';
 	  document.getElementById('inv-rarity').value = item.rarity || '';
 	  document.getElementById('inv-attunement').value = item.attunement || '';
