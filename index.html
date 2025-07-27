@@ -548,19 +548,19 @@
 	}
 
   .inventory-table th:nth-child(1),
-  .inventory-table td:nth-child(1) { width: 20%; } /* Item */
+  .inventory-table td:nth-child(1) { width: 15%; } /* Item */
   .inventory-table th:nth-child(2),
   .inventory-table td:nth-child(2) { width: 5%; }  /* Qty */
   .inventory-table th:nth-child(3),
-  .inventory-table td:nth-child(3) { width: 5%; }  /* Weight */
+  .inventory-table td:nth-child(3) { width: 8%; }  /* Weight */
   .inventory-table th:nth-child(4),
-  .inventory-table td:nth-child(4) { width: 5%; }  /* Value */
+  .inventory-table td:nth-child(4) { width: 8%; }  /* Value */
   .inventory-table th:nth-child(5),
-  .inventory-table td:nth-child(5) { width: 15%; } /* Type */
+  .inventory-table td:nth-child(5) { width: 12%; } /* Type */
   .inventory-table th:nth-child(6),
-  .inventory-table td:nth-child(6) { width: 15%; } /* Rarity */
+  .inventory-table td:nth-child(6) { width: 10%; } /* Rarity */
   .inventory-table th:nth-child(7),
-  .inventory-table td:nth-child(7) { width: 15%; } /* Attunement */
+  .inventory-table td:nth-child(7) { width: 10%; } /* Attunement */
   .inventory-table th:nth-child(8),
   .inventory-table td:nth-child(8) { width: 10%; } /* Attuned */
   .inventory-table th:nth-child(9),
@@ -1728,7 +1728,7 @@
 	  const table = document.createElement("table");
 	  table.className = "inventory-table";
 
-		const headers = ["Item", "Qty", "Weight", "Value", "Type", "Rarity", "Attunement", "Attuned", "Notes", "Actions"];
+		const headers = ["Item", "Qty", "Weight (lb)", "Value (gp)", "Type", "Rarity", "Attunement", "Attuned", "Notes", "Actions"];
 		const headerRow = document.createElement("tr");
 
 		headers.forEach((text, index) => {
