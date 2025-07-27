@@ -221,7 +221,8 @@
 	}
 
 	.icon-button:hover {
-	  background: #5a2b49;
+	  background-color: #5a2b49;
+	  border-radius: 4px;
 	}
 	
 	.npc-card:hover {
@@ -468,7 +469,7 @@
 	.inventory-table {
 	  width: 100%;
 	  border-collapse: collapse;
-	  table-layout: fixed; /* ✅ forces fixed column widths */
+	  table-layout: fixed; /* forces fixed column widths */
 	}
 
 	.inventory-table th,
@@ -578,6 +579,46 @@
 	  color: white;
 	  border: none;
 	  font-size: 14px;
+	}
+	
+	[contenteditable="true"] {
+	outline: 1px dashed gold;
+	background: rgba(255, 215, 0, 0.1);
+	}
+	
+	.gold-box {
+	  display: flex;
+	  align-items: center;
+	  gap: 8px;
+	  margin-left: auto;
+	  background: #1f0f1a;
+	  padding: 6px 10px;
+	  border-radius: 6px;
+	  border: 1px solid #4d2d3e;
+	  color: gold;
+	  font-size: 14px;
+	}
+
+	.gold-label {
+	  font-weight: bold;
+	}
+
+	.gold-value {
+	  color: white;
+	  min-width: 50px;
+	  text-align: right;
+	  border-bottom: 1px dashed gold;
+	  padding: 2px 6px;
+	  cursor: pointer;
+	}
+
+	.gold-value[contenteditable="true"] {
+	  background: rgba(255, 215, 0, 0.15);
+	}
+
+	.gold-save {
+	  padding: 0 6px;
+	  font-size: 16px;
 	}
 </style>
 
@@ -1467,7 +1508,7 @@
 		})
 		.subscribe();
 
-	  // ✅ NEW: If starting on inventory tab, fetch inventory
+	  //If starting on inventory tab, fetch inventory
 	  if (savedSection === 'inventory-tab') {
 		await fetchAndRenderInventory();
 	  }
@@ -1511,7 +1552,7 @@
 			i.player?.trim().toLowerCase() === name.trim().toLowerCase()
 		  );
 
-		  // 🔍 If searching, filter items for each player
+		  //If searching, filter items for each player
 		  if (inventorySearchQuery) {
 			playerItems = playerItems.filter(item =>
 			  Object.values(item).some(val =>
@@ -1566,7 +1607,7 @@
 	  const section = document.createElement("section");
 	  section.className = "inventory-section open"; // initially open
 	  section.id = `${name.trim().toLowerCase().replace(/\s+/g, '-')}-inventory`;
-
+	  
 	  // Header row with player name and button
 		const header = document.createElement("div");
 		header.className = "inventory-header";
@@ -1698,6 +1739,78 @@
 		contentWrapper.appendChild(table);
 		section.appendChild(contentWrapper);
 
+		// --- Gold Display Compact Top-Right ---
+		const goldBox = document.createElement('div');
+		goldBox.className = 'gold-box';
+
+		const goldLabel = document.createElement('span');
+		goldLabel.textContent = 'Gold (gp):';
+		goldLabel.className = 'gold-label';
+
+		const goldValue = document.createElement('span');
+		goldValue.dataset.goldFor = name;
+		goldValue.className = 'gold-value';
+		goldValue.setAttribute('contenteditable', false);
+
+		const saveBtn = document.createElement('button');
+		saveBtn.textContent = '✅';
+		saveBtn.className = 'icon-button gold-save';
+		saveBtn.title = 'Save gold';
+		saveBtn.style.display = 'none';
+
+		goldValue.ondblclick = () => {
+		  goldValue.setAttribute('contenteditable', true);
+		  goldValue.focus();
+		  saveBtn.style.display = 'inline-block';
+		};
+
+		saveBtn.onclick = async () => {
+		  goldValue.setAttribute('contenteditable', false);
+		  saveBtn.style.display = 'none';
+
+		  const raw = goldValue.textContent.trim();
+		  if (!/^\d+$/.test(raw)) {
+			alert('Please enter a valid number for gold.');
+			return;
+		  }
+
+		  const newGp = parseInt(raw);
+
+		  const { data: player, error } = await supabase
+			.from('players')
+			.select('id')
+			.eq('name', name)
+			.single();
+
+		  if (error || !player) {
+			alert('Player not found.');
+			return;
+		  }
+
+		  const { error: updateError } = await supabase
+			.from('players')
+			.update({ gp: newGp })
+			.eq('id', player.id);
+
+		  if (updateError) {
+			alert('Failed to update gold.');
+		  }
+		};
+
+		(async () => {
+		  const { data: player } = await supabase
+			.from('players')
+			.select('gp')
+			.eq('name', name)
+			.single();
+		  goldValue.textContent = player?.gp ?? '0';
+		})();
+
+		goldBox.appendChild(goldLabel);
+		goldBox.appendChild(goldValue);
+		goldBox.appendChild(saveBtn);
+		header.appendChild(goldBox); // inserts into the top right of the inventory header
+	
 	  return section;
 	}
 
@@ -1844,6 +1957,23 @@
 		payload => {
 		  console.log('📦 Inventory change:', payload);
 		  fetchAndRenderInventory();
+		}
+	  )
+	  .subscribe();
+	  
+	  supabase
+	  .channel('players-gp-updates')
+	  .on(
+		'postgres_changes',
+		{ event: 'UPDATE', schema: 'public', table: 'players' },
+		payload => {
+		  const { name, gp } = payload.new;
+		  const spans = document.querySelectorAll(`[data-gold-for="${name}"]`);
+		  spans.forEach(span => {
+			if (span !== document.activeElement) {
+			  span.textContent = gp;
+			}
+		  });
 		}
 	  )
 	  .subscribe();
