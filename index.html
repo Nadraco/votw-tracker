@@ -457,16 +457,24 @@
 	  color: #aaa;
 	  font-weight: bold;
 	}
-}
+	
+	#inventory-tab table th, #inventory-tab table td {
+	  padding: 6px;
+	  text-align: left;
+	  color: #ddd;
+	  border-bottom: 1px solid #3e2337;
+	}
+	#inventory-tab table th {
+	  color: gold;
+	}
 </style>
 
 </head>
 <body>
   <div class="topnav">
-	<button onclick="switchSection('quest-tracker', this)">
-	
-	Quest Tracker</button>
+	<button onclick="switchSection('quest-tracker', this)">	Quest Tracker</button>
     <button onclick="switchSection('npc-library', this)">NPC Library</button>
+	<button onclick="switchSection('inventory-tab', this)">Inventory</button>
   </div>
   
    <!-- QUEST TRACKER -->
@@ -628,6 +636,59 @@
 		  </div>
 		</div>
 
+		<div id="inventory-tab" class="content">
+		  <div class="main" style="width:100%; padding: 20px;">
+			<h2 style="color:gold;">📦 Inventory</h2>
+			<div id="inventory-container"></div> <!-- ✅ Must exist -->
+		  </div>
+		</div>
+
+
+		<!-- INVENTORY MODAL -->
+		<div id="inventory-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); justify-content:center; align-items:center; z-index:1000;">
+		  <div style="background:#2e1a32; padding:24px; border-radius:10px; width:400px; position:relative; display:flex; flex-direction:column;">
+			<button onclick="closeInventoryModal()" style="position:absolute; top:10px; right:12px; background:none; border:none; color:white; font-size:20px;">&times;</button>
+			<h2 style="color:gold; margin-bottom:16px;">Add Inventory Item</h2>
+
+			<input type="text" id="inv-item" placeholder="Item Name" style="margin-bottom:10px;" />
+			<input type="number" id="inv-qty" placeholder="Quantity" style="margin-bottom:10px;" />
+			<select id="inv-type" style="margin-bottom:10px; padding:8px; background:#3e2337; color:white; border:none; border-radius:4px;">
+			  <option value="">Select Type</option>
+			  <option>Adventuring Gear</option>
+			  <option>Ammunitions</option>
+			  <option>Armour</option>
+			  <option>Clothing</option>
+			  <option>Consumable</option>
+			  <option>Gem</option>
+			  <option>Ink Carving</option>
+			  <option>Key Item</option>
+			  <option>Miscellaneous</option>
+			  <option>Weapon</option>
+			  <option>Wondrous Item</option>
+			</select>
+			<select id="inv-rarity" style="margin-bottom:10px; padding:8px; background:#3e2337; color:white; border:none; border-radius:4px;">
+			  <option value="">Select Rarity</option>
+			  <option>Common</option>
+			  <option>Uncommon</option>
+			  <option>Rare</option>
+			  <option>Very Rare</option>
+			  <option>Legendary</option>
+			  <option>Artifact</option>
+			</select>
+			<select id="inv-attunement" style="margin-bottom:10px; padding:8px; background:#3e2337; color:white; border:none; border-radius:4px;">
+			  <option value="">Requires Attunement?</option>
+			  <option value="Yes">Yes</option>
+			  <option value="No">No</option>
+			</select>
+			<label style="color:white; margin-bottom:6px;">
+			  <input type="checkbox" id="inv-attuned" style="margin-right:6px;" /> Attuned
+			</label>
+			<input type="text" id="inv-notes" placeholder="Notes" style="margin-bottom:12px;" />
+			<button class="gold-button" onclick="submitInventoryItem()">➕ Add Item</button>
+		  </div>
+		</div>
+
+
 	<script>
 	// Firebase + Supabase Initialization, Quest Tracker Logic, Modal, NPC Upload, NPC Display
 
@@ -654,6 +715,14 @@
 	let selectedQuestIndex = null;
 	let draggedQuest = null;
 	let draggedFromStatus = null;
+	
+	const inventoryPlayers = [
+	  "Elyn Blackwater",
+	  "Gideon Ghostshroud",
+	  "Maro Pelagius",
+	  "Quinn Kellar",
+	  "Ship"
+	];
 
 	function switchTab(tabName) {
 	  currentTab = tabName;
@@ -664,15 +733,24 @@
 	  renderQuests();
 	}
 	
-		function switchSection(sectionId, button) {
-		  localStorage.setItem('activeSection', sectionId); //Save to localStorage
+	function switchSection(sectionId, button) {
+	  // Save the selected section
+	  localStorage.setItem('activeSection', sectionId);
 
-		  document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-		  document.getElementById(sectionId).classList.add('active');
+	  // Toggle active content section
+	  document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+	  document.getElementById(sectionId)?.classList.add('active');
 
-		  document.querySelectorAll('.topnav button').forEach(btn => btn.classList.remove('active'));
-		  button.classList.add('active');
-		}
+	  // Toggle active tab button
+	  document.querySelectorAll('.topnav button').forEach(btn => btn.classList.remove('active'));
+	  button?.classList.add('active');
+
+	  // Load inventory if applicable
+	  if (sectionId === 'inventory-tab') {
+		console.log("🧪 Inventory tab being shown, calling fetch...");
+		fetchAndRenderInventory();
+	  }
+	}
 
 	function renderQuests() {
 	  const list = document.getElementById('quest-list');
@@ -1143,16 +1221,6 @@
 	  renderNPCs();
 	}
 
-	function switchSection(sectionId, button) {
-	  localStorage.setItem('activeSection', sectionId);
-
-	  document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-	  document.getElementById(sectionId)?.classList.add('active');
-
-	  document.querySelectorAll('.topnav button').forEach(btn => btn.classList.remove('active'));
-	  button?.classList.add('active');
-	}
-
 	function renderCountryButtons() {
 	  const countries = [...new Set(npcs.map(n => n.country))].sort();
 	  countryButtons.innerHTML = '';
@@ -1254,33 +1322,37 @@
 	  const savedQuestTab = localStorage.getItem('questTab') || 'active';
 
 	  const button = [...document.querySelectorAll('.topnav button')]
-		.find(btn => btn.textContent.trim().toLowerCase().includes(savedSection.includes('npc') ? 'npc' : 'quest'));
+		.find(btn => btn.textContent.trim().toLowerCase().includes(
+		  savedSection.includes('npc') ? 'npc' :
+		  savedSection.includes('inventory') ? 'inventory' :
+		  'quest'
+		));
 
-	  switchSection(savedSection, button);
-	  switchTab(savedQuestTab);
+	  switchSection(savedSection, button); 
+	  switchTab(savedQuestTab); // Ensure quests show on load
 
-	  await fetchNPCs();             //Get data
-	  populateCountrySelect();      //Fill dropdowns
-	  renderCountryButtons();       //Show buttons
-	  renderNPCs();                 //Show NPC cards
-	  
-	  	//Real Time Changes
-		supabase
-	  .from('npcs')
-	  .on('*', payload => {
-		console.log('Change received!', payload);
-		
-		// Refetch NPCs and rerender on any insert/update/delete
-		fetchNPCs().then(() => {
-		  populateCountrySelect();
-		  renderCountryButtons();
-		  renderNPCs();
-		});
-	  })
-	  .subscribe();
+	  await fetchNPCs();
+	  populateCountrySelect();
+	  renderCountryButtons();
+	  renderNPCs();
+
+	  // Realtime updates for NPCs
+	  supabase
+		.from('npcs')
+		.on('*', payload => {
+		  fetchNPCs().then(() => {
+			populateCountrySelect();
+			renderCountryButtons();
+			renderNPCs();
+		  });
+		})
+		.subscribe();
+
+	  // ✅ NEW: If starting on inventory tab, fetch inventory
+	  if (savedSection === 'inventory-tab') {
+		await fetchAndRenderInventory();
+	  }
 	});
-
-
 
 	function displayFileName(input) {
 	  const label = document.getElementById('file-label');
@@ -1299,8 +1371,196 @@
 		label.textContent = 'Choose New Image';
 	  }
 	}
+	
+	async function fetchAndRenderInventory() {
+	  const container = document.getElementById("inventory-container");
+	  if (!container) {
+		console.warn("⚠️ inventory-container not found. Is the tab visible?");
+		return;
+	  }
 
+	  container.innerHTML = ''; // Optional, keep this for safety
+
+	  //Cleanup
+	  inventoryPlayers.forEach(name => {
+		const sectionId = `${name.trim().toLowerCase().replace(/\s+/g, '-')}-inventory`;
+		const existing = document.getElementById(sectionId);
+		if (existing) existing.remove();
+	  });
+
+	  const { data, error } = await supabase.from("inventory").select("*");
+	  if (error) {
+		console.error("❌ Failed to load inventory:", error);
+		return;
+	  }
+
+	  inventoryPlayers.forEach(name => {
+		const playerItems = data.filter(i =>
+		  i.player?.trim().toLowerCase() === name.trim().toLowerCase()
+		);
+		const section = createInventorySection(name, playerItems);
+		if (section) container.appendChild(section);
+	  });
+	}
+
+	function createInventorySection(name, items) {
+	  console.log(`🧱 Creating section for ${name}...`);
+	  const sectionId = `${name.trim().toLowerCase().replace(/\s+/g, '-')}-inventory`;
+
+	  //Prevent duplicate containers
+	  if (document.getElementById(sectionId)) {
+		console.warn(`⚠️ Skipping already-rendered section for ${name}`);
+		return null;
+	  }
+
+	  const wrapper = document.createElement("div");
+	  wrapper.style.marginBottom = "20px";
+	  wrapper.style.border = "1px solid #555";
+	  wrapper.style.borderRadius = "10px";
+	  wrapper.style.padding = "10px";
+	  wrapper.style.background = "#2e1a32";
+
+	  const header = document.createElement("h3");
+	  header.textContent = name;
+	  header.style.color = "gold";
+	  header.style.cursor = "pointer";
+	  header.onclick = () => {
+		table.style.display = table.style.display === "none" ? "table" : "none";
+	  };
+	  wrapper.appendChild(header);
+
+	  const addBtn = document.createElement("button");
+	  addBtn.textContent = "+ Add Item";
+	  addBtn.className = "gold-button";
+	  addBtn.style.marginBottom = "10px";
+	  addBtn.onclick = () => addItem(name);
+	  wrapper.appendChild(addBtn);
+
+	  if (!items || items.length === 0) {
+		const empty = document.createElement("div");
+		empty.textContent = "No items found.";
+		empty.style.color = "#ccc";
+		wrapper.appendChild(empty);
+		return wrapper;
+	  }
+
+	  const table = document.createElement("table");
+	  table.style.width = "100%";
+	  table.style.borderCollapse = "collapse";
+	  table.style.marginTop = "10px";
+	  table.style.background = "#3e2337";
+	  table.style.color = "#fff";
+
+	  const headers = ["Item", "Qty", "Type", "Rarity", "Attunement", "Attuned", "Notes"];
+	  const headerRow = document.createElement("tr");
+	  headers.forEach(h => {
+		const th = document.createElement("th");
+		th.textContent = h;
+		th.style.borderBottom = "1px solid #999";
+		th.style.padding = "8px";
+		headerRow.appendChild(th);
+	  });
+	  table.appendChild(headerRow);
+
+	  items.forEach(item => {
+		const row = document.createElement("tr");
+		[
+		  item.item,
+		  item.qty,
+		  item.type,
+		  item.rarity,
+		  item.attunement,
+		  item.attuned ? "✔" : "—",
+		  item.notes
+		].forEach(text => {
+		  const td = document.createElement("td");
+		  td.textContent = text || "";
+		  td.style.padding = "8px";
+		  td.style.borderBottom = "1px solid #444";
+		  row.appendChild(td);
+		});
+		table.appendChild(row);
+	  });
+
+	  wrapper.appendChild(table);
+	  return wrapper;
+	}
+
+	let currentInventoryPlayer = null;
+
+	function addItem(playerName) {
+	  currentInventoryPlayer = playerName;
+	  document.getElementById('inv-item').value = '';
+	  document.getElementById('inv-qty').value = 1;
+	  document.getElementById('inv-type').value = '';
+	  document.getElementById('inv-rarity').value = '';
+	  document.getElementById('inv-attunement').value = '';
+	  document.getElementById('inv-attuned').checked = false;
+	  document.getElementById('inv-notes').value = '';
+	  document.getElementById('inventory-modal').style.display = 'flex';
+	}
+
+	function closeInventoryModal() {
+	  document.getElementById('inventory-modal').style.display = 'none';
+	}
+
+	async function submitInventoryItem() {
+	  const item = document.getElementById('inv-item').value.trim();
+	  const qty = parseInt(document.getElementById('inv-qty').value) || 1;
+	  const type = document.getElementById('inv-type').value.trim();
+	  const rarity = document.getElementById('inv-rarity').value.trim();
+	  const attunement = document.getElementById('inv-attunement').value.trim();
+	  const attuned = document.getElementById('inv-attuned').checked;
+	  const notes = document.getElementById('inv-notes').value.trim();
+
+	  if (!item) {
+		alert("Item name is required.");
+		return;
+	  }
+
+	  const { error } = await supabase.from('inventory').insert([{
+		player: currentInventoryPlayer,
+		item, qty, type, rarity, attunement, attuned, notes
+	  }]);
+
+		if (error) {
+		  console.error("Insert failed:", error);
+		  alert("Failed to add item.");
+		} else {
+		  closeInventoryModal();
+			fetchAndRenderInventory().then(() => {
+			  const section = document.getElementById(`${currentInventoryPlayer}-inventory`);
+			  if (section) section.style.display = 'block';
+			});
+		}
+	}
+	
+	async function deleteInventoryItem(id) {
+	  if (!confirm("Delete this item?")) return;
+	  const { error } = await supabase.from('inventory').delete().eq('id', id);
+		if (error) {
+		  console.error("Delete failed:", error);
+		} else {
+		  fetchAndRenderInventory();
+		}
+	}
+
+	supabase
+	  .channel('inventory-updates')
+	  .on(
+		'postgres_changes',
+		{ event: '*', schema: 'public', table: 'inventory' },
+		payload => {
+		  console.log('📦 Inventory change:', payload);
+		  fetchAndRenderInventory();
+		}
+	  )
+	  .subscribe();
+
+	function toggleInventory(name) {
+	  const section = document.getElementById(`${name}-inventory`);
+	  if (section) section.style.display = section.style.display === 'none' ? 'block' : 'none';
+	}
 	</script>
 </body>
 </html>
-
