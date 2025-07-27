@@ -500,16 +500,22 @@
 	  display: flex;
 	  justify-content: space-between;
 	  align-items: center;
-	  background: #3e2337;
-	  padding: 12px 16px;
-	  cursor: pointer;
-	  border-bottom: 1px solid #4d2d3e;
+	  padding: 0 20px 10px 20px;
 	}
 
 	.inventory-header h2 {
-	  margin: 0;
-	  font-size: 18px;
 	  color: gold;
+	  margin: 0;
+	}
+
+	.inventory-header input {
+	  width: 250px;
+	  padding: 10px;
+	  border-radius: 6px;
+	  background: #1f0f1a;
+	  color: white;
+	  border: none;
+	  font-size: 14px;
 	}
 	
 	.inventory-header h2 span {
@@ -557,7 +563,22 @@
   .inventory-table.drag-over {
   outline: 2px dashed gold;
 	}
-  
+	
+	.inventory-search-wrapper {
+	  display: flex;
+	  justify-content: flex-end;
+	  padding: 20px;
+	}
+
+	.inventory-search-wrapper input {
+	  width: 250px;
+	  padding: 14px;
+	  border-radius: 6px;
+	  background: #1f0f1a;
+	  color: white;
+	  border: none;
+	  font-size: 14px;
+	}
 </style>
 
 </head>
@@ -725,10 +746,18 @@
 			<button onclick="submitNPCEdit()" class="gold-button">Update NPC</button>
 		  </div>
 		</div>
-
+			<div class="inventory-header">
+			  <h2>Inventory</h2>
+			  <input 
+				type="text" 
+				id="inventory-search" 
+				placeholder="🔍 Search items..." 
+				oninput="filterInventory(this.value)"
+			  />
+			</div>
 		<div id="inventory-tab" class="content">
+
 		  <div class="main" style="width:100%; padding: 20px;">
-			<h2 style="color:gold;">Inventory</h2>
 			<div id="inventory-container"></div>
 		  </div>
 		</div>
@@ -1332,11 +1361,11 @@
 
 	function renderNPCs() {
 	  const statusFilter = document.getElementById('npc-status-filter').value.toLowerCase();
-	  const filtered = npcs.filter(n =>
-		(!searchQuery || n.name.toLowerCase().includes(searchQuery.toLowerCase())) &&
-		(!activeCountry || n.country === activeCountry) &&
-		(!statusFilter || (n.status || 'unknown').toLowerCase() === statusFilter)
-	  );
+		const filtered = npcs.filter(n =>
+		  (!searchQuery || n.name.toLowerCase().includes(searchQuery.toLowerCase())) &&
+		  (!statusFilter || (n.status || 'unknown').toLowerCase() === statusFilter) &&
+		  (!searchQuery && activeCountry ? n.country === activeCountry : true)
+		);
 
 	  npcContainer.innerHTML = '';
 
@@ -1469,14 +1498,7 @@
 		return;
 	  }
 
-	  container.innerHTML = ''; // Optional, keep this for safety
-
-	  //Cleanup
-	  inventoryPlayers.forEach(name => {
-		const sectionId = `${name.trim().toLowerCase().replace(/\s+/g, '-')}-inventory`;
-		const existing = document.getElementById(sectionId);
-		if (existing) existing.remove();
-	  });
+		container.innerHTML = ''; 
 
 	  const { data, error } = await supabase.from("inventory").select("*");
 	  if (error) {
@@ -1484,13 +1506,23 @@
 		return;
 	  }
 
-	  inventoryPlayers.forEach(name => {
-		const playerItems = data.filter(i =>
-		  i.player?.trim().toLowerCase() === name.trim().toLowerCase()
-		);
-		const section = createInventorySection(name, playerItems);
-		if (section) container.appendChild(section);
-	  });
+		inventoryPlayers.forEach(name => {
+		  let playerItems = data.filter(i =>
+			i.player?.trim().toLowerCase() === name.trim().toLowerCase()
+		  );
+
+		  // 🔍 If searching, filter items for each player
+		  if (inventorySearchQuery) {
+			playerItems = playerItems.filter(item =>
+			  Object.values(item).some(val =>
+				typeof val === 'string' && val.toLowerCase().includes(inventorySearchQuery)
+			  )
+			);
+		  }
+
+		  const section = createInventorySection(name, playerItems);
+		  if (section) container.appendChild(section);
+		});
 	  
 		console.log("Rendering sections for:", inventoryPlayers);
 		console.log("Fetched items:", data);
@@ -1586,16 +1618,20 @@
 	  const table = document.createElement("table");
 	  table.className = "inventory-table";
 
-	  const headers = ["Item", "Qty", "Type", "Rarity", "Attunement", "Attuned", "Notes", "Actions"];
-	  const headerRow = document.createElement("tr");
-	  headers.forEach(text => {
-		const th = document.createElement("th");
-		th.textContent = text;
-		th.style.textAlign = "left";
-		th.style.padding = "8px";
-		th.style.borderBottom = "2px solid gold";
-		headerRow.appendChild(th);
-	  });
+		const headers = ["Item", "Qty", "Type", "Rarity", "Attunement", "Attuned", "Notes", "Actions"];
+		const headerRow = document.createElement("tr");
+
+		headers.forEach((text, index) => {
+		  const th = document.createElement("th");
+		  th.textContent = text;
+		  th.style.cursor = 'pointer';
+		  th.title = 'Double-click to sort';
+		  th.addEventListener('dblclick', () => {
+			sortInventoryTable(table, index);
+		  });
+		  headerRow.appendChild(th);
+		});
+
 	  table.appendChild(headerRow);
 
 	  items.forEach(item => {
@@ -1739,12 +1775,65 @@
 	  document.getElementById('inv-type').value = item.type || '';
 	  document.getElementById('inv-rarity').value = item.rarity || '';
 	  document.getElementById('inv-attunement').value = item.attunement || '';
-	  document.getElementById('inv-attuned').checked = !!item.attuned;
+	  document.getElementById('inv-attuned').checked = item.attuned === true || item.attuned === 'true';
 	  document.getElementById('inv-notes').value = item.notes || '';
 	  document.getElementById('inventory-modal').style.display = 'flex';
 
 	  // Save the item ID for update
 	  document.getElementById('inventory-modal').dataset.editingItemId = item.id;
+	}
+	
+	function sortInventoryTable(table, columnIndex) {
+	  const rows = Array.from(table.querySelectorAll("tr")).slice(1); // Exclude header
+	  const filteredRows = rows.filter(row => row.cells.length > columnIndex);
+	  if (filteredRows.length === 0) return;
+
+	  const sampleValue = filteredRows[0].cells[columnIndex].textContent.trim();
+	  const isNumber = !isNaN(parseFloat(sampleValue));
+	  const isAsc = table.dataset.sortCol == columnIndex && table.dataset.sortDir !== 'asc';
+
+	  filteredRows.sort((a, b) => {
+		const valA = a.cells[columnIndex].textContent.trim();
+		const valB = b.cells[columnIndex].textContent.trim();
+		if (isNumber) {
+		  return isAsc ? valA - valB : valB - valA;
+		} else {
+		  return isAsc
+			? valA.localeCompare(valB, undefined, { sensitivity: 'base' })
+			: valB.localeCompare(valA, undefined, { sensitivity: 'base' });
+		}
+	  });
+
+	  table.dataset.sortCol = columnIndex;
+	  table.dataset.sortDir = isAsc ? 'asc' : 'desc';
+
+	  // Reset and update arrows
+	  const thElements = table.querySelectorAll("th");
+	  thElements.forEach((th, idx) => {
+		const label = th.textContent.replace(/[\u25B2\u25BC]/g, "").trim();
+		th.textContent = label;
+		if (idx === columnIndex) {
+		  th.textContent = label + (isAsc ? " ▲" : " ▼");
+		}
+	  });
+
+	  filteredRows.forEach(row => table.appendChild(row));
+	}
+	
+	let inventorySearchQuery = '';
+
+	let searchTimeout;
+	function filterInventory(query) {
+	  clearTimeout(searchTimeout);
+	  inventorySearchQuery = query.trim().toLowerCase();
+	  searchTimeout = setTimeout(() => {
+		fetchAndRenderInventory();
+	  }, 150); // delay by 150ms
+	}
+	
+	function searchNPCs(query) {
+	searchQuery = query.trim().toLowerCase();
+	renderNPCs();
 	}
 
 	supabase
