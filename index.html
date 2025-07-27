@@ -499,6 +499,10 @@
   .inventory-table th:nth-child(7),
   .inventory-table td:nth-child(7) { width: 20%; } /* Notes */
   
+  .inventory-table.drag-over {
+  outline: 2px dashed gold;
+	}
+  
 </style>
 
 </head>
@@ -1434,82 +1438,130 @@
 		if (section) container.appendChild(section);
 	  });
 	}
+	
+	let draggedInventoryItemId = null;
+	let draggedInventoryFromPlayer = null;
 
-function createInventorySection(name, items) {
-  const wrapper = document.createElement("div");
-  wrapper.className = "inventory-section";
-  wrapper.style.marginBottom = "30px";
+	function handleInventoryDragStart(e) {
+	  draggedInventoryItemId = e.target.dataset.itemId;
+	  draggedInventoryFromPlayer = e.target.dataset.fromPlayer;
+	  e.target.style.opacity = '0.5';
+	}
 
-  const title = document.createElement("h3");
-  title.textContent = name;
-  title.style.color = "gold";
-  wrapper.appendChild(title);
+	function handleInventoryDragEnd(e) {
+	  e.target.style.opacity = '';
+	  draggedInventoryItemId = null;
+	  draggedInventoryFromPlayer = null;
+	}
 
-  const addButton = document.createElement("button");
-  addButton.textContent = "+ Add Item";
-  addButton.className = "gold-button";
-  addButton.style.marginBottom = "8px";
-  addButton.onclick = () => addItem(name);
-  wrapper.appendChild(addButton);
+	async function handleInventoryDrop(e, toPlayer) {
+	  e.preventDefault();
 
-  // Build table
-  const table = document.createElement("table");
-  table.className = "inventory-table";
-  table.style.width = "100%";
-  table.style.borderCollapse = "collapse";
-  table.style.background = "#3e2337";
-  table.style.color = "#fff";
-  table.style.marginTop = "10px";
+	  if (!draggedInventoryItemId || !draggedInventoryFromPlayer || draggedInventoryFromPlayer === toPlayer) return;
 
-  // Headers
-  const headers = ["Item", "Qty", "Type", "Rarity", "Attunement", "Attuned", "Notes"];
-  const headerRow = document.createElement("tr");
-  headers.forEach(text => {
-    const th = document.createElement("th");
-    th.textContent = text;
-    th.style.borderBottom = "1px solid #999";
-    th.style.padding = "8px";
-    headerRow.appendChild(th);
-  });
-  table.appendChild(headerRow);
+	  const { error } = await supabase
+		.from('inventory')
+		.update({ player: toPlayer })
+		.eq('id', draggedInventoryItemId);
 
-  // Body rows
-  if (!items || items.length === 0) {
-    const row = document.createElement("tr");
-    const td = document.createElement("td");
-    td.textContent = "No items found.";
-    td.colSpan = headers.length;
-    td.style.textAlign = "center";
-    td.style.color = "#ccc";
-    td.style.padding = "8px";
-    row.appendChild(td);
-    table.appendChild(row);
-  } else {
-    items.forEach(item => {
-      const row = document.createElement("tr");
-      const values = [
-        item.item,
-        item.qty,
-        item.type,
-        item.rarity,
-        item.attunement,
-        item.attuned ? "✔" : "",
-        item.notes
-      ];
-      values.forEach(val => {
-        const td = document.createElement("td");
-        td.textContent = val || "";
-        td.style.padding = "8px";
-        td.style.borderBottom = "1px solid #444";
-        row.appendChild(td);
-      });
-      table.appendChild(row);
-    });
-  }
+	  if (error) {
+		console.error("❌ Failed to move item:", error);
+		alert("Failed to move item.");
+	  } else {
+		console.log(`✅ Moved item ${draggedInventoryItemId} to ${toPlayer}`);
+		fetchAndRenderInventory(); // Refresh UI
+	  }
+	}
 
-  wrapper.appendChild(table);
-  return wrapper;
-}
+	function createInventorySection(name, items) {
+	  const wrapper = document.createElement("div");
+	  wrapper.className = "inventory-section";
+	  wrapper.style.marginBottom = "30px";
+
+	  const title = document.createElement("h3");
+	  title.textContent = name;
+	  title.style.color = "gold";
+	  wrapper.appendChild(title);
+
+	  const addButton = document.createElement("button");
+	  addButton.textContent = "+ Add Item";
+	  addButton.className = "gold-button";
+	  addButton.style.marginBottom = "8px";
+	  addButton.onclick = () => addItem(name);
+	  wrapper.appendChild(addButton);
+
+	  // Build table
+	  const table = document.createElement("table");
+	  table.className = "inventory-table";
+	  table.style.width = "100%";
+	  table.style.borderCollapse = "collapse";
+	  table.style.background = "#3e2337";
+	  table.style.color = "#fff";
+	  table.style.marginTop = "10px";
+
+	  // Headers
+	  const headers = ["Item", "Qty", "Type", "Rarity", "Attunement", "Attuned", "Notes"];
+	  const headerRow = document.createElement("tr");
+	  headers.forEach(text => {
+		const th = document.createElement("th");
+		th.textContent = text;
+		th.style.borderBottom = "1px solid #999";
+		th.style.padding = "8px";
+		headerRow.appendChild(th);
+	  });
+	  table.appendChild(headerRow);
+	  table.addEventListener('dragover', e => {
+	  e.preventDefault();
+	  table.classList.add('drag-over');
+		});
+		table.addEventListener('dragleave', () => {
+		  table.classList.remove('drag-over');
+		});
+		table.addEventListener('drop', e => handleInventoryDrop(e, name));
+
+	  // Body rows
+	  if (!items || items.length === 0) {
+		const row = document.createElement("tr");
+		const td = document.createElement("td");
+		td.textContent = "No items found.";
+		td.colSpan = headers.length;
+		td.style.textAlign = "center";
+		td.style.color = "#ccc";
+		td.style.padding = "8px";
+		row.appendChild(td);
+		table.appendChild(row);
+	  } else {
+		items.forEach(item => {
+		  const row = document.createElement("tr");
+		  row.setAttribute('draggable', 'true');
+		  row.dataset.itemId = item.id;
+		  row.dataset.fromPlayer = name;
+
+		  row.addEventListener('dragstart', handleInventoryDragStart);
+		  row.addEventListener('dragend', handleInventoryDragEnd);
+		  const values = [
+			item.item,
+			item.qty,
+			item.type,
+			item.rarity,
+			item.attunement,
+			item.attuned ? "✔" : "",
+			item.notes
+		  ];
+		  values.forEach(val => {
+			const td = document.createElement("td");
+			td.textContent = val || "";
+			td.style.padding = "8px";
+			td.style.borderBottom = "1px solid #444";
+			row.appendChild(td);
+		  });
+		  table.appendChild(row);
+		});
+	  }
+
+	  wrapper.appendChild(table);
+	  return wrapper;
+	}
 	let currentInventoryPlayer = null;
 
 	function addItem(playerName) {
