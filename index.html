@@ -467,6 +467,38 @@
 	#inventory-tab table th {
 	  color: gold;
 	}
+	
+	.inventory-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* ✅ Key: forces even columns */
+	}
+
+	.inventory-table th,
+	.inventory-table td {
+    padding: 8px;
+    border-bottom: 1px solid #444;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left;
+	}
+
+  .inventory-table th:nth-child(1),
+  .inventory-table td:nth-child(1) { width: 20%; } /* Item */
+  .inventory-table th:nth-child(2),
+  .inventory-table td:nth-child(2) { width: 5%; }  /* Qty */
+  .inventory-table th:nth-child(3),
+  .inventory-table td:nth-child(3) { width: 15%; } /* Type */
+  .inventory-table th:nth-child(4),
+  .inventory-table td:nth-child(4) { width: 15%; } /* Rarity */
+  .inventory-table th:nth-child(5),
+  .inventory-table td:nth-child(5) { width: 15%; } /* Attunement */
+  .inventory-table th:nth-child(6),
+  .inventory-table td:nth-child(6) { width: 10%; } /* Attuned */
+  .inventory-table th:nth-child(7),
+  .inventory-table td:nth-child(7) { width: 20%; } /* Notes */
+  
 </style>
 
 </head>
@@ -1403,89 +1435,81 @@
 	  });
 	}
 
-	function createInventorySection(name, items) {
-	  console.log(`🧱 Creating section for ${name}...`);
-	  const sectionId = `${name.trim().toLowerCase().replace(/\s+/g, '-')}-inventory`;
+function createInventorySection(name, items) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "inventory-section";
+  wrapper.style.marginBottom = "30px";
 
-	  //Prevent duplicate containers
-	  if (document.getElementById(sectionId)) {
-		console.warn(`⚠️ Skipping already-rendered section for ${name}`);
-		return null;
-	  }
+  const title = document.createElement("h3");
+  title.textContent = name;
+  title.style.color = "gold";
+  wrapper.appendChild(title);
 
-	  const wrapper = document.createElement("div");
-	  wrapper.style.marginBottom = "20px";
-	  wrapper.style.border = "1px solid #555";
-	  wrapper.style.borderRadius = "10px";
-	  wrapper.style.padding = "10px";
-	  wrapper.style.background = "#2e1a32";
+  const addButton = document.createElement("button");
+  addButton.textContent = "+ Add Item";
+  addButton.className = "gold-button";
+  addButton.style.marginBottom = "8px";
+  addButton.onclick = () => addItem(name);
+  wrapper.appendChild(addButton);
 
-	  const header = document.createElement("h3");
-	  header.textContent = name;
-	  header.style.color = "gold";
-	  header.style.cursor = "pointer";
-	  header.onclick = () => {
-		table.style.display = table.style.display === "none" ? "table" : "none";
-	  };
-	  wrapper.appendChild(header);
+  // Build table
+  const table = document.createElement("table");
+  table.className = "inventory-table";
+  table.style.width = "100%";
+  table.style.borderCollapse = "collapse";
+  table.style.background = "#3e2337";
+  table.style.color = "#fff";
+  table.style.marginTop = "10px";
 
-	  const addBtn = document.createElement("button");
-	  addBtn.textContent = "+ Add Item";
-	  addBtn.className = "gold-button";
-	  addBtn.style.marginBottom = "10px";
-	  addBtn.onclick = () => addItem(name);
-	  wrapper.appendChild(addBtn);
+  // Headers
+  const headers = ["Item", "Qty", "Type", "Rarity", "Attunement", "Attuned", "Notes"];
+  const headerRow = document.createElement("tr");
+  headers.forEach(text => {
+    const th = document.createElement("th");
+    th.textContent = text;
+    th.style.borderBottom = "1px solid #999";
+    th.style.padding = "8px";
+    headerRow.appendChild(th);
+  });
+  table.appendChild(headerRow);
 
-	  if (!items || items.length === 0) {
-		const empty = document.createElement("div");
-		empty.textContent = "No items found.";
-		empty.style.color = "#ccc";
-		wrapper.appendChild(empty);
-		return wrapper;
-	  }
+  // Body rows
+  if (!items || items.length === 0) {
+    const row = document.createElement("tr");
+    const td = document.createElement("td");
+    td.textContent = "No items found.";
+    td.colSpan = headers.length;
+    td.style.textAlign = "center";
+    td.style.color = "#ccc";
+    td.style.padding = "8px";
+    row.appendChild(td);
+    table.appendChild(row);
+  } else {
+    items.forEach(item => {
+      const row = document.createElement("tr");
+      const values = [
+        item.item,
+        item.qty,
+        item.type,
+        item.rarity,
+        item.attunement,
+        item.attuned ? "✔" : "",
+        item.notes
+      ];
+      values.forEach(val => {
+        const td = document.createElement("td");
+        td.textContent = val || "";
+        td.style.padding = "8px";
+        td.style.borderBottom = "1px solid #444";
+        row.appendChild(td);
+      });
+      table.appendChild(row);
+    });
+  }
 
-	  const table = document.createElement("table");
-	  table.style.width = "100%";
-	  table.style.borderCollapse = "collapse";
-	  table.style.marginTop = "10px";
-	  table.style.background = "#3e2337";
-	  table.style.color = "#fff";
-
-	  const headers = ["Item", "Qty", "Type", "Rarity", "Attunement", "Attuned", "Notes"];
-	  const headerRow = document.createElement("tr");
-	  headers.forEach(h => {
-		const th = document.createElement("th");
-		th.textContent = h;
-		th.style.borderBottom = "1px solid #999";
-		th.style.padding = "8px";
-		headerRow.appendChild(th);
-	  });
-	  table.appendChild(headerRow);
-
-	  items.forEach(item => {
-		const row = document.createElement("tr");
-		[
-		  item.item,
-		  item.qty,
-		  item.type,
-		  item.rarity,
-		  item.attunement,
-		  item.attuned ? "✔" : "—",
-		  item.notes
-		].forEach(text => {
-		  const td = document.createElement("td");
-		  td.textContent = text || "";
-		  td.style.padding = "8px";
-		  td.style.borderBottom = "1px solid #444";
-		  row.appendChild(td);
-		});
-		table.appendChild(row);
-	  });
-
-	  wrapper.appendChild(table);
-	  return wrapper;
-	}
-
+  wrapper.appendChild(table);
+  return wrapper;
+}
 	let currentInventoryPlayer = null;
 
 	function addItem(playerName) {
