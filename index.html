@@ -1947,7 +1947,7 @@
 	  } else {
 		// Add new item
 		({ error } = await supabase.from('inventory').insert([{
-		  player: currentInventoryPlayer, item, qty, type, rarity, attunement, attuned, notes
+		  player: currentInventoryPlayer, item, qty, weight, value, type, rarity, attunement, attuned, notes
 		}]));
 	  }
 
