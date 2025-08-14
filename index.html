@@ -204,26 +204,58 @@
 	}
 	
 	
-	.npc-actions {
-	  position: absolute;
-	  top: 6px;
-	  right: 6px;
-	  display: flex;
-	  gap: 4px;
-	}
-	
-	.icon-button {
-	  background: none;
-	  border: none;
-	  cursor: pointer;
-	  font-size: 1rem;
-	  margin-right: 6px;
+	/* Wrap the image so we can position the action buttons over it */
+	.npc-image-wrap {
+	  position: relative;
+	  display: inline-block;
+	  width: 100%;
 	}
 
-	.icon-button:hover {
-	  background-color: #5a2b49;
-	  border-radius: 4px;
+	/* Action buttons: hidden by default */
+	.npc-actions {
+	  position: absolute;
+	  top: 8px;
+	  right: 8px;
+	  display: flex;
+	  gap: 6px;
+	  opacity: 0;
+	  pointer-events: none;
+	  transform: translateY(-4px);
+	  transition: opacity .15s ease, transform .15s ease;
 	}
+
+	/* Reveal on hover of the image area */
+	.npc-image-wrap:hover .npc-actions {
+	  opacity: 1;
+	  transform: translateY(0);
+	  pointer-events: auto;
+	}
+
+	/* Colored buttons */
+	.icon-button {
+	  border: none;
+	  cursor: pointer;
+	  font-size: 0.95rem;
+	  padding: 6px 8px;
+	  border-radius: 6px;
+	  line-height: 1;
+	}
+
+	.icon-button.edit {
+	  background: gold;
+	  color: #000;
+	}
+
+	.icon-button.delete {
+	  background: #e74c3c;
+	  color: #fff;
+	}
+
+	/* Optional hover polish */
+	.icon-button:hover {
+	  filter: brightness(1.05);
+	}
+
 	
 	.npc-card:hover {
 		background: #281624;
@@ -267,6 +299,63 @@
 	  margin-bottom: 12px;
 	  color: #ccc;
 	}
+
+
+	/* Wrap the image so we can position the action buttons over it */
+	.npc-image-wrap {
+	  position: relative;
+	  display: inline-block;
+	  width: 100%;
+	}
+
+	/* Action buttons: hidden by default */
+	.npc-actions {
+	  position: absolute;
+	  top: 8px;
+	  right: 8px;
+	  display: flex;
+	  gap: 6px;
+	  opacity: 0;
+	  pointer-events: none;
+	  transform: translateY(-4px);
+	  transition: opacity .15s ease, transform .15s ease;
+	}
+
+	/* Reveal on hover of the image area */
+	.npc-image-wrap:hover .npc-actions {
+	  opacity: 1;
+	  transform: translateY(0);
+	  pointer-events: auto;
+	}
+
+	.icon-button {
+	  border: none;
+	  cursor: pointer;
+	  font-size: 0.95rem;
+	  padding: 6px 8px;
+	  border-radius: 6px;
+	  line-height: 1;
+	  background-color: #5a2b49; /* matches your hover purple */
+	  color: white;
+	}
+
+	.icon-button.edit {
+	  background-color: #7a3b69; /* slightly lighter purple for edit */
+	}
+
+	.icon-button.delete {
+	  background-color: #8a2c2c; /* muted red for delete */
+	}
+
+	.icon-button:hover {
+	  filter: brightness(1.15);
+	}
+
+	/* Keep card hover as-is */
+	.npc-card:hover { background: #281624; }
+
+
+
 
   /* Modal */
   #quest-modal {
@@ -639,21 +728,20 @@
 	  margin-bottom: 12px;
 	}
 	
-	/* Centered Columns in Inventory Table */
-	.inventory-table th:nth-child(2),
-	.inventory-table td:nth-child(2),
-	.inventory-table th:nth-child(3),
-	.inventory-table td:nth-child(3),
-	.inventory-table th:nth-child(4),
-	.inventory-table td:nth-child(4),
-	.inventory-table th:nth-child(7),
-	.inventory-table td:nth-child(7),
-	.inventory-table th:nth-child(8),
-	.inventory-table td:nth-child(8),
-	.inventory-table th:nth-child(10),
-	.inventory-table td:nth-child(10) {
-	text-align: center;
-	vertical-align: middle;
+	/* Center only Qty, Weight, Value, Attunement, and Attuned columns */
+	#inventory-tab .inventory-table th:nth-child(2),
+	#inventory-tab .inventory-table td:nth-child(2), /* Qty */
+	#inventory-tab .inventory-table th:nth-child(3),
+	#inventory-tab .inventory-table td:nth-child(3), /* Weight (lb) */
+	#inventory-tab .inventory-table th:nth-child(4),
+	#inventory-tab .inventory-table td:nth-child(4), /* Value (gp) */
+	#inventory-tab .inventory-table th:nth-child(7),
+	#inventory-tab .inventory-table td:nth-child(7), /* Attunement */
+	#inventory-tab .inventory-table th:nth-child(8),
+	#inventory-tab .inventory-table td:nth-child(8)  /* Attuned */
+	{
+	  text-align: center;
+	  vertical-align: middle;
 	}
 	
 	/* Captain's Quarters (Corkboard) */
@@ -1084,11 +1172,11 @@
 	let draggedFromStatus = null;
 	
 	const inventoryPlayers = [
+	  "Ship",
 	  "Elyn Blackwater",
 	  "Gideon Ghostshroud",
 	  "Maro Pelagius",
-	  "Quinn Kellar",
-	  "Ship"
+	  "Quinn Kellar"
 	];
 
 	function switchTab(tabName) {
@@ -1338,6 +1426,7 @@
 	let npcs = [];
 	let activeCountry = '';
 	let searchQuery = '';
+	const ALL_COUNTRY = 'All';
 	const npcContainer = document.getElementById('npc-container');
 	const countryButtons = document.getElementById('country-buttons');
 	
@@ -1356,20 +1445,20 @@
 	  }
 
 	  npcs = data;
-	  
-		// Sort NPCs A-Z
+
+	  // Sort NPCs A-Z
 	  npcs.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
 
 	  const countries = [...new Set(npcs.map(n => n.country))];
 
-		if (!activeCountry || !countries.includes(activeCountry)) {
-		  const savedCountry = localStorage.getItem('activeCountry');
-		  if (savedCountry && countries.includes(savedCountry)) {
-			activeCountry = savedCountry;
-		  } else {
-			activeCountry = countries[0]; // fallback
-		  }
-		}
+	  // Restore previously selected country (including "All")
+	  const savedCountry = localStorage.getItem('activeCountry');
+	  if (savedCountry && (savedCountry === ALL_COUNTRY || countries.includes(savedCountry))) {
+		activeCountry = savedCountry;
+	  } else if (!activeCountry) {
+		// Default to "All" if nothing is chosen yet
+		activeCountry = ALL_COUNTRY;
+	  }
 	}
 
 	function populateCountrySelect() {
@@ -1578,6 +1667,20 @@
 	  const countries = [...new Set(npcs.map(n => n.country))].sort();
 	  countryButtons.innerHTML = '';
 
+	  // "All" button first
+	  const allBtn = document.createElement('button');
+	  allBtn.textContent = ALL_COUNTRY;
+	  allBtn.classList.toggle('active', activeCountry === ALL_COUNTRY);
+	  allBtn.onclick = () => {
+		activeCountry = ALL_COUNTRY;
+		localStorage.setItem('activeCountry', ALL_COUNTRY);
+		document.querySelectorAll('#country-buttons button').forEach(b => b.classList.remove('active'));
+		allBtn.classList.add('active');
+		renderNPCs();
+	  };
+	  countryButtons.appendChild(allBtn);
+
+	  // Then the individual countries
 	  countries.forEach(country => {
 		const btn = document.createElement('button');
 		btn.textContent = country;
@@ -1593,85 +1696,101 @@
 	  });
 	}
 
+
 	function renderNPCs() {
 	  const statusFilter = document.getElementById('npc-status-filter').value.toLowerCase();
-		const filtered = npcs.filter(n =>
-		  (!searchQuery || n.name.toLowerCase().includes(searchQuery.toLowerCase())) &&
-		  (!statusFilter || (n.status || 'unknown').toLowerCase() === statusFilter) &&
-		  (!searchQuery && activeCountry ? n.country === activeCountry : true)
-		);
+
+	  const filtered = npcs.filter(n => {
+		const matchesText   = !searchQuery || n.name.toLowerCase().includes(searchQuery.toLowerCase());
+		const matchesStatus = !statusFilter || (n.status || 'unknown').toLowerCase() === statusFilter;
+		const matchesCountry = (activeCountry && activeCountry !== ALL_COUNTRY)
+		  ? n.country === activeCountry
+		  : true;
+		return matchesText && matchesStatus && matchesCountry;
+	  });
 
 	  npcContainer.innerHTML = '';
 
-	  const regions = [...new Set(filtered.map(n => n.region))].sort();
+	  const keyFor = (n) => (activeCountry === ALL_COUNTRY ? `${n.country} — ${n.region}` : n.region);
+	  const groups = [...new Set(filtered.map(keyFor))].sort((a,b) => a.localeCompare(b));
 
-	  regions.forEach(region => {
+	  groups.forEach(groupLabel => {
 		const regionDiv = document.createElement('div');
 		regionDiv.classList.add('region');
 
 		const title = document.createElement('h3');
-		title.textContent = region;
-		title.onclick = () => {
-		  regionContent.classList.toggle('active');
-
-		  // Save State
-		  const key = `region_${region}`;
-		  localStorage.setItem(key, regionContent.classList.contains('active') ? 'open' : 'closed');
-		};
-		
+		title.textContent = groupLabel;
 
 		const regionContent = document.createElement('div');
 		regionContent.classList.add('region-content');
-		const savedState = localStorage.getItem(`region_${region}`);
+
+		const savedState = localStorage.getItem(`region_${groupLabel}`);
 		if (savedState === 'open' || savedState === null) {
 		  regionContent.classList.add('active');
 		}
 
+		title.onclick = () => {
+		  regionContent.classList.toggle('active');
+		  localStorage.setItem(
+			`region_${groupLabel}`,
+			regionContent.classList.contains('active') ? 'open' : 'closed'
+		  );
+		};
+
 		const tileContainer = document.createElement('div');
 		tileContainer.classList.add('npc-tile-container');
 
-		filtered.filter(n => n.region === region).forEach(npc => {
-		  const card = document.createElement('div');
-		  card.classList.add('npc-card');
+		filtered
+		  .filter(n => keyFor(n) === groupLabel)
+		  .forEach(npc => {
+			const card = document.createElement('div');
+			card.classList.add('npc-card');
 
-		  const img = document.createElement('img');
-		  img.src = npc.image_url || '';
-		  img.alt = npc.name;
+			const img = document.createElement('img');
+			img.src = npc.image_url || '';
+			img.alt = npc.name;
 
-		  const name = document.createElement('div');
-		  name.classList.add('npc-name');
-		  name.textContent = npc.name;
+			const name = document.createElement('div');
+			name.classList.add('npc-name');
+			name.textContent = npc.name;
 
-		  const status = document.createElement('div');
-		  status.classList.add('npc-status');
-		  const statusText = document.createElement('span');
-		  statusText.classList.add('status-text', (npc.status || 'unknown').toLowerCase());
-		  statusText.textContent = npc.status || 'Unknown';
-		  status.innerHTML = `Status: `;
-		  status.appendChild(statusText);
+			const status = document.createElement('div');
+			status.classList.add('npc-status');
+			const statusText = document.createElement('span');
+			statusText.classList.add('status-text', (npc.status || 'unknown').toLowerCase());
+			statusText.textContent = npc.status || 'Unknown';
+			status.innerHTML = `Status: `;
+			status.appendChild(statusText);
 
-		  const actions = document.createElement('div');
-		  actions.classList.add('npc-actions');
+			const actions = document.createElement('div');
+			actions.classList.add('npc-actions');
 
-		  const editBtn = document.createElement('button');
-		  editBtn.classList.add('icon-button');
-		  editBtn.innerHTML = '✏️';
-		  editBtn.onclick = () => editNPC(npc.id);
+			const editBtn = document.createElement('button');
+			editBtn.classList.add('icon-button', 'edit');
+			editBtn.innerHTML = '✏️';
+			editBtn.title = 'Edit NPC';
+			editBtn.onclick = () => editNPC(npc.id);
 
-		  const deleteBtn = document.createElement('button');
-		  deleteBtn.classList.add('icon-button');
-		  deleteBtn.innerHTML = '🗑️';
-		  deleteBtn.onclick = () => deleteNPC(npc.id);
+			const deleteBtn = document.createElement('button');
+			deleteBtn.classList.add('icon-button', 'delete');
+			deleteBtn.innerHTML = '🗑️';
+			deleteBtn.title = 'Delete NPC';
+			deleteBtn.onclick = () => deleteNPC(npc.id);
 
-		  actions.appendChild(editBtn);
-		  actions.appendChild(deleteBtn);
+			actions.appendChild(editBtn);
+			actions.appendChild(deleteBtn);
 
-		  card.appendChild(actions);
-		  card.appendChild(img);
-		  card.appendChild(name);
-		  card.appendChild(status);
-		  tileContainer.appendChild(card);
-		});
+			const imageWrap = document.createElement('div');
+			imageWrap.classList.add('npc-image-wrap');
+			imageWrap.appendChild(img);
+			imageWrap.appendChild(actions);
+
+			card.appendChild(imageWrap);
+			card.appendChild(name);
+			card.appendChild(status);
+
+			tileContainer.appendChild(card);
+		  });
 
 		regionContent.appendChild(tileContainer);
 		regionDiv.appendChild(title);
@@ -1679,6 +1798,7 @@
 		npcContainer.appendChild(regionDiv);
 	  });
 	}
+
 
 
 	document.addEventListener('DOMContentLoaded', async () => {
@@ -1814,7 +1934,7 @@
 	  return num.toLocaleString(undefined, opts);
 	}
 
-	// Special for table: only show decimal if needed
+	// Only Show Decimal If Needed
 	function fmt1IfNeeded(n) {
 	  const num = typeof n === 'string' ? parseFloat(n.replace(/,/g, '')) : Number(n);
 	  if (!isFinite(num)) return n ?? '';
@@ -1822,6 +1942,21 @@
 	  return num.toLocaleString(undefined, hasDecimal
 		? { minimumFractionDigits: 1, maximumFractionDigits: 1 }
 		: {});
+	}
+	
+	//Inventory Sort Persistence
+	const INV_SORT_KEY = (player) => `invSort:${player}`;
+
+	function saveInventorySort(player, col, dir) {
+	  localStorage.setItem(INV_SORT_KEY(player), JSON.stringify({ col, dir }));
+	}
+
+	function loadInventorySort(player) {
+	  try {
+		return JSON.parse(localStorage.getItem(INV_SORT_KEY(player))) || null;
+	  } catch (_) {
+		return null;
+	  }
 	}
 
 	function createInventorySection(name, items) {
@@ -1886,6 +2021,7 @@
 
 	  const table = document.createElement("table");
 	  table.className = "inventory-table";
+	  table.dataset.player = name;
 
 	  const headers = ["Item", "Qty", "Weight (lb)", "Value (gp)", "Type", "Rarity", "Attunement", "Attuned", "Notes", "Actions"];
 	  const headerRow = document.createElement("tr");
@@ -1915,7 +2051,7 @@
 		  item.item,
 		  item.qty,
 		  item.weight,
-		  item.value, // <-- We'll format this later
+		  item.value,
 		  item.type,
 		  item.rarity,
 		  item.attunement,
@@ -1967,10 +2103,15 @@
 	  });
 	  table.addEventListener('drop', e => handleInventoryDrop(e, name));
 
-	  const contentWrapper = document.createElement("div");
-	  contentWrapper.className = "inventory-content";
-	  contentWrapper.appendChild(table);
-	  section.appendChild(contentWrapper);
+	const saved = loadInventorySort(name);
+	if (saved && Number.isInteger(saved.col)) {
+	  sortInventoryTable(table, saved.col, { forceDir: saved.dir });
+	}
+
+	const contentWrapper = document.createElement("div");
+	contentWrapper.className = "inventory-content";
+	contentWrapper.appendChild(table);
+	section.appendChild(contentWrapper);
 
 	  const goldBox = document.createElement('div');
 	  goldBox.className = 'gold-box';
@@ -2150,43 +2291,106 @@
 	  document.getElementById('inventory-modal').style.display = 'flex';
 	  document.getElementById('inventory-modal').dataset.editingItemId = item.id;
 	}
+		
 	
-	function sortInventoryTable(table, columnIndex) {
-	  const rows = Array.from(table.querySelectorAll("tr")).slice(1); // Exclude header
-	  const filteredRows = rows.filter(row => row.cells.length > columnIndex);
-	  if (filteredRows.length === 0) return;
+	function sortInventoryTable(table, columnIndex, opts = {}) {
+	  const rows = Array.from(table.querySelectorAll("tr")).slice(1);
+	  const filteredRows = rows.filter(r => r.cells.length > columnIndex);
+	  if (!filteredRows.length) return;
 
-	  const sampleValue = filteredRows[0].cells[columnIndex].textContent.trim();
-	  const isNumber = !isNaN(parseFloat(sampleValue));
-	  const isAsc = table.dataset.sortCol == columnIndex && table.dataset.sortDir !== 'asc';
+	  const player = table.dataset.player || 'global';
 
-	  filteredRows.sort((a, b) => {
-		const valA = a.cells[columnIndex].textContent.trim();
-		const valB = b.cells[columnIndex].textContent.trim();
-		if (isNumber) {
-		  return isAsc ? valA - valB : valB - valA;
-		} else {
-		  return isAsc
-			? valA.localeCompare(valB, undefined, { sensitivity: 'base' })
-			: valB.localeCompare(valA, undefined, { sensitivity: 'base' });
+	  // Column Types by Index
+	  const NUMERIC_COLS = new Set([1, 2, 3]); // Qty, Weight, Value
+	  const BOOLEAN_COLS = new Set([7]);       // Attuned
+	  const RARITY_COL = 5;                    // Rarity
+
+	  const rarityOrder = {
+		"common": 0,
+		"uncommon": 1,
+		"rare": 2,
+		"very rare": 3,
+		"legendary": 4,
+		"artifact": 5
+	  };
+
+	  const parseNumber = (txt) => {
+		if (txt == null) return null;
+		const s = String(txt).replace(/,/g, '').trim();
+		const m = s.match(/-?\d+(?:\.\d+)?/);
+		if (!m) return null;
+		const n = parseFloat(m[0]);
+		return Number.isFinite(n) ? n : null;
+	  };
+
+	  const getCellVal = (row, idx) => row.cells[idx].textContent.trim();
+	  const isNumericCol = NUMERIC_COLS.has(columnIndex);
+	  const isBooleanCol = BOOLEAN_COLS.has(columnIndex);
+	  const isRarityCol  = columnIndex === RARITY_COL;
+
+	  let isAsc;
+	  if (opts.forceDir === 'asc') {
+		isAsc = true;
+	  } else if (opts.forceDir === 'desc') {
+		isAsc = false;
+	  } else if (table.dataset.sortCol == columnIndex) {
+		isAsc = table.dataset.sortDir !== 'asc';
+	  } else {
+		isAsc = !(isNumericCol || isBooleanCol); // numbers/booleans → desc; text/rarity → asc
+	  }
+
+	  filteredRows.sort((ra, rb) => {
+		let a = getCellVal(ra, columnIndex);
+		let b = getCellVal(rb, columnIndex);
+
+		const aBlank = a === '' || a == null;
+		const bBlank = b === '' || b == null;
+		if (aBlank && bBlank) return 0;
+		if (aBlank) return 1;
+		if (bBlank) return -1;
+
+		if (isBooleanCol) {
+		  const va = /✔|true/i.test(a) ? 1 : 0;
+		  const vb = /✔|true/i.test(b) ? 1 : 0;
+		  return isAsc ? va - vb : vb - va;
 		}
+
+		if (isNumericCol) {
+		  const va = parseNumber(a);
+		  const vb = parseNumber(b);
+		  if (va == null || vb == null) {
+			return isAsc
+			  ? a.localeCompare(b, undefined, { sensitivity: 'base' })
+			  : b.localeCompare(a, undefined, { sensitivity: 'base' });
+		  }
+		  return isAsc ? va - vb : vb - va;
+		}
+
+		if (isRarityCol) {
+		  const va = rarityOrder[a.toLowerCase()] ?? Number.MAX_SAFE_INTEGER;
+		  const vb = rarityOrder[b.toLowerCase()] ?? Number.MAX_SAFE_INTEGER;
+		  return isAsc ? va - vb : vb - va;
+		}
+
+		return isAsc
+		  ? a.localeCompare(b, undefined, { sensitivity: 'base' })
+		  : b.localeCompare(a, undefined, { sensitivity: 'base' });
 	  });
 
 	  table.dataset.sortCol = columnIndex;
 	  table.dataset.sortDir = isAsc ? 'asc' : 'desc';
+	  saveInventorySort(player, columnIndex, table.dataset.sortDir);
 
-	  const thElements = table.querySelectorAll("th");
-	  thElements.forEach((th, idx) => {
-		const label = th.textContent.replace(/[\u25B2\u25BC]/g, "").trim();
+	  const ths = table.querySelectorAll("th");
+	  ths.forEach((th, idx) => {
+		const label = th.textContent.replace(/[\u25B2\u25BC]\s*$/g, '').replace(/\s*[▲▼]\s*$/g, '').trim();
 		th.textContent = label;
-		if (idx === columnIndex) {
-		  th.textContent = label + (isAsc ? " ▲" : " ▼");
-		}
+		if (idx === columnIndex) th.textContent = label + (isAsc ? " ▲" : " ▼");
 	  });
 
 	  filteredRows.forEach(row => table.appendChild(row));
 	}
-	
+
 	let inventorySearchQuery = '';
 
 	let searchTimeout;
