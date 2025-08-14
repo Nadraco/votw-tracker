@@ -867,6 +867,133 @@
 	  border-radius: 6px;
 	  object-fit: contain;
 	}
+	
+	/* MAPS */
+	.maps-sidebar h3 { color: gold; margin: 0 0 10px; }
+	.maps-sidebar input[type="text"] { width: 100%; padding: 10px; border-radius: 6px; border: none; background:#1f0f1a; color:#fff; font-size:14px; margin-bottom:12px; }
+
+	.maps-grid {
+	  display: grid;
+	  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	  gap: 16px;
+	}
+	.map-card {
+	  background: #1f0f1a;
+	  border-radius: 8px;
+	  overflow: hidden;
+	  cursor: pointer;
+	  transition: .15s;
+	  position: relative;
+	}
+	.map-card:hover { background:#281624; transform: translateY(-1px); }
+	.map-card img {
+	  width: 100%;
+	  height: 180px;
+	  object-fit: cover;
+	  display: block;
+	}
+	.map-name {
+	  padding: 10px 12px;
+	  color: #fff;
+	  font-size: 14px;
+	  display: flex;
+	  align-items: center;
+	  justify-content: space-between;
+	  gap: 8px;
+	}
+
+	.map-actions {
+	  position: absolute;
+	  top: 8px; right: 8px;
+	  display: flex; gap: 6px;
+	  opacity: 0; transform: translateY(-4px);
+	  transition: opacity .15s ease, transform .15s ease;
+	  pointer-events: none;
+	}
+	.map-card:hover .map-actions { opacity: 1; transform: translateY(0); pointer-events: auto; }
+	.map-actions .icon-button { background:#8a2c2c; color:white; }
+
+	#map-view-modal {
+	  display: none;
+	  position: fixed; inset: 0;
+	  background: rgba(0,0,0,.8);
+	  align-items: center; justify-content: center;
+	  z-index: 1100;
+	}
+	#map-view-modal .inner {
+	  background: #2e1a32;
+	  border-radius: 12px;
+	  padding: 12px;
+	  width: min(95vw, 1200px);
+	  height: 90vh;           
+	  max-height: 90vh;
+	  display: flex;
+	  flex-direction: column;
+	  position: relative;
+	}
+
+	#map-view-modal img {
+	  width: 100%;
+	  height: auto;
+	  max-height: 80vh;
+	  object-fit: contain;
+	  border-radius: 8px;
+	  background: #1f0f1a;
+	}
+	#map-view-modal .caption {
+	  padding: 10px 6px 0;
+	  color: #ddd; font-size: 14px;
+	  text-align: center;
+	}
+	#map-modal-close {
+	  position: absolute; top: 10px; right: 12px;
+	  background: none; border: none; color: white;
+	  font-size: 22px; cursor: pointer;
+	}
+	
+	/* viewer fills remaining height */
+	#map-view-modal .map-viewer {
+	  position: relative;
+	  flex: 1;
+	  min-height: 0;     /* important for flex children to grow */
+	  overflow: hidden;
+	  background: #1f0f1a;
+	  border-radius: 8px;
+	}
+
+	/* the zoomable image */
+	#map-view-modal img#map-modal-img {
+	  position: absolute;
+	  top: 0;
+	  left: 0;
+	  transform-origin: 0 0;
+	  cursor: grab;
+	  user-select: none;
+	  -webkit-user-drag: none;
+	  width: auto;       /* override earlier width:100% */
+	  height: auto;      /* override earlier height:auto in container */
+	  max-width: none;
+	  max-height: none;
+	}
+
+	/* zoom controls */
+	#map-view-modal .zoom-controls {
+	  position: absolute;
+	  right: 12px;
+	  bottom: 12px;
+	  display: flex;
+	  gap: 8px;
+	  z-index: 20;
+	}
+	#map-view-modal .zoom-controls .icon-button {
+	  background: #3e2337;
+	  color: #fff;
+	  border: 1px solid #5c3b4e;
+	  border-radius: 8px;
+	  padding: 8px 12px;
+	  font-weight: 600;
+	}
+	#map-view-modal .zoom-controls .icon-button:hover { filter: brightness(1.1); }
 
 </style>
 
@@ -876,6 +1003,7 @@
 	<button onclick="switchSection('quest-tracker', this)">	Quest Tracker</button>
     <button onclick="switchSection('npc-library', this)">NPC Library</button>
 	<button onclick="switchSection('inventory-tab', this)">Inventory</button>
+	<button onclick="switchSection('maps-tab', this)">Maps</button>
 	<button onclick="switchSection('captains-quarters', this)">Captain's Quarters</button>
 	<button onclick="switchSection('business-tab', this)">Business</button>
 
@@ -1145,6 +1273,46 @@
 	  </div>
 	</div>
 	
+		<!-- MAPS -->
+	<div id="maps-tab" class="content">
+	  <div class="sidebar maps-sidebar">
+		<h3>Maps Upload</h3>
+		<input type="text" id="map-name-input" placeholder="Map name (e.g., City of X)" />
+
+		<div class="file-upload-wrapper" style="margin-bottom: 14px;">
+		  <label for="map-image-upload" class="gold-button file-label" id="map-file-label">Choose Image</label>
+		  <input type="file" id="map-image-upload" accept="image/*" onchange="displayMapFileName(this)" />
+		</div>
+
+		<button class="gold-button" onclick="uploadMap()">Upload Map</button>
+	  </div>
+
+	  <div class="main">
+		<h3 style="color: gold; margin-top: 0;">Map Gallery</h3>
+		<div id="maps-grid" class="maps-grid"></div>
+	  </div>
+	</div>
+
+	<!-- MAP VIEW MODAL -->
+	<div id="map-view-modal" onclick="if(event.target.id==='map-view-modal') closeMapModal()">
+	  <div class="inner">
+		<button id="map-modal-close" onclick="closeMapModal()">&times;</button>
+
+		<!-- NEW: viewer wrapper + controls -->
+		<div class="map-viewer" id="map-viewer">
+		  <img id="map-modal-img" alt="Map" />
+		</div>
+
+		<div class="zoom-controls">
+		  <button id="zoom-out" class="icon-button">−</button>
+		  <button id="zoom-in"  class="icon-button">+</button>
+		  <button id="zoom-reset" class="icon-button">⟲</button>
+		</div>
+
+		<div class="caption" id="map-modal-caption"></div>
+	  </div>
+	</div>
+	
 	<script>
 	// Firebase & Supabase Initialisation
 
@@ -1200,6 +1368,10 @@
 	  if (sectionId === 'inventory-tab') {
 		console.log("🧪 Inventory tab being shown, calling fetch...");
 		fetchAndRenderInventory();
+	  }
+	  
+	  if (sectionId === 'maps-tab') {
+		fetchMaps();
 	  }
 	}
 
@@ -1811,6 +1983,10 @@
 
 	  switchSection(savedSection, button); 
 	  switchTab(savedQuestTab); 
+	  
+	  if (savedSection === 'maps-tab') {
+	  fetchMaps();
+	}
 
 	  await fetchNPCs();
 	  populateCountrySelect();
@@ -1828,6 +2004,13 @@
 		  });
 		})
 		.subscribe();
+		
+		supabase
+	  .channel('maps-updates')
+	  .on('postgres_changes', { event: '*', schema: 'public', table: 'maps' }, payload => {
+		fetchMaps();
+	  })
+	  .subscribe();
 
 	  if (savedSection === 'inventory-tab') {
 		await fetchAndRenderInventory();
@@ -2840,6 +3023,320 @@
 	  el.addEventListener('mousedown', onDown);
 	  handle.addEventListener('mousedown', rsDown);
 	  }
+	  
+	/* Maps */
+	const MAP_BUCKET = 'map-images'; // create this storage bucket in Supabase
+	let maps = [];
+
+	/* Render all maps to the grid */
+	function renderMaps() {
+	  const grid = document.getElementById('maps-grid');
+	  if (!grid) return;
+	  grid.innerHTML = '';
+
+	  if (!maps.length) {
+		grid.innerHTML = `<div style="opacity:.75; color:#e6d6e6;">No maps yet. Upload one on the left.</div>`;
+		return;
+	  }
+
+	  maps.forEach(m => {
+		const card = document.createElement('div');
+		card.className = 'map-card';
+
+		const img = document.createElement('img');
+		img.loading = 'lazy';
+		img.src = m.image_url;
+		img.alt = m.name || 'Map';
+
+		const name = document.createElement('div');
+		name.className = 'map-name';
+		name.innerHTML = `<span>${m.name || 'Untitled'}</span>`;
+
+		const actions = document.createElement('div');
+		actions.className = 'map-actions';
+		const del = document.createElement('button');
+		del.className = 'icon-button delete';
+		del.title = 'Delete Map';
+		del.textContent = '🗑️';
+		del.onclick = (e) => { e.stopPropagation(); deleteMap(m.id, m.path); };
+		actions.appendChild(del);
+
+		card.onclick = () => openMapModal(m.image_url, m.name);
+
+		card.appendChild(img);
+		card.appendChild(actions);
+		card.appendChild(name);
+		grid.appendChild(card);
+	  });
+	}
+
+	/* Fetch maps from Supabase */
+	async function fetchMaps() {
+	  const { data, error } = await supabase
+		.from('maps')
+		.select('id, name, image_url, path, created_at')
+		.order('created_at', { ascending: false });
+
+	  if (error) {
+		console.error('Failed to load maps:', error);
+		return;
+	  }
+	  maps = data || [];
+	  renderMaps();
+	}
+
+	/* Upload a map image + row */
+	async function uploadMap() {
+	  const name = (document.getElementById('map-name-input').value || '').trim();
+	  const file = document.getElementById('map-image-upload').files[0];
+
+	  if (!file || !name) {
+		alert('Please provide a map name and choose an image.');
+		return;
+	  }
+
+	  const safeName = name.replace(/[^a-z0-9\-_. ]/gi, '').replace(/\s+/g, '_');
+	  const path = `maps/${Date.now()}__${safeName}__${file.name.replace(/\s+/g,'_')}`;
+
+	  const { error: upErr } = await supabase.storage.from(MAP_BUCKET).upload(path, file);
+	  if (upErr) {
+		console.error('Map upload failed:', upErr);
+		alert('Upload failed: ' + upErr.message);
+		return;
+	  }
+
+	  const { data: pub } = supabase.storage.from(MAP_BUCKET).getPublicUrl(path);
+	  const imageUrl = pub?.publicUrl || '';
+
+	  const { error: rowErr } = await supabase.from('maps').insert([{ name, image_url: imageUrl, path }]);
+	  if (rowErr) {
+		console.error('DB insert failed:', rowErr);
+		alert('Failed to save map record.');
+		return;
+	  }
+
+	  // reset form
+	  document.getElementById('map-name-input').value = '';
+	  document.getElementById('map-image-upload').value = '';
+	  document.getElementById('map-file-label').textContent = 'Choose Image';
+	  fetchMaps();
+	}
+
+	/* Delete a map + storage file */
+	async function deleteMap(id, path) {
+	  if (!confirm('Delete this map?')) return;
+
+	  // try to delete storage first (if it fails, still remove db row)
+	  if (path) {
+		const { error: stErr } = await supabase.storage.from(MAP_BUCKET).remove([path]);
+		if (stErr) console.warn('Storage delete issue:', stErr.message);
+	  }
+
+	  const { error } = await supabase.from('maps').delete().eq('id', id);
+	  if (error) {
+		alert('Failed to delete map.');
+		return;
+	  }
+	  fetchMaps();
+	}
+
+	/* Modal open/close */
+	function openMapModal(url, name = 'Map') {
+	  const modal = document.getElementById('map-view-modal');
+	  const img   = document.getElementById('map-modal-img');
+
+	  img.src = url;
+	  document.getElementById('map-modal-caption').textContent = name;
+
+	  modal.style.display = 'flex';
+
+	  // init listeners once, then fit image to viewer on load (start at cover)
+	  initMapZoomOnce();
+	  resetMapZoom();
+	}
+
+	function closeMapModal() {
+	  const modal = document.getElementById('map-view-modal');
+	  modal.style.display = 'none';
+	  const img = document.getElementById('map-modal-img');
+	  img.src = ''; // free memory
+	}
+
+	function displayMapFileName(input) {
+	  const label = document.getElementById('map-file-label');
+	  label.textContent = input.files?.[0]?.name ? `File: ${input.files[0].name}` : 'Choose Image';
+	}
+
+	// -------- Map modal zoom/pan ----------
+	let mapZoom = {
+	  s: 1, min: 1, max: 8,
+	  x: 0, y: 0,
+	  panning: false, startX: 0, startY: 0,
+	  pinchStartDist: 0, pinchStartS: 1,
+	  inited: false
+	};
+
+	function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+	function getViewer() { return document.getElementById('map-viewer'); }
+	function getMapImg() { return document.getElementById('map-modal-img'); }
+
+	function applyMapTransform() {
+	  const img = getMapImg();
+	  img.style.transform = `translate(${mapZoom.x}px, ${mapZoom.y}px) scale(${mapZoom.s})`;
+	}
+
+	function fitMapToViewer(mode = 'contain') {
+	  const viewer = getViewer();
+	  const img = getMapImg();
+	  const rect = viewer.getBoundingClientRect();
+
+	  const naturalW = img.naturalWidth || 1;
+	  const naturalH = img.naturalHeight || 1;
+
+	  // contain vs cover
+	  const sContain = Math.min(rect.width / naturalW, rect.height / naturalH);
+	  const sCover   = Math.max(rect.width / naturalW, rect.height / naturalH);
+	  const s        = mode === 'cover' ? sCover : sContain;
+
+	  // allow zooming out to see the whole image
+	  mapZoom.min = sContain;
+	  mapZoom.s   = s;
+
+	  // center the image
+	  mapZoom.x   = (rect.width  - naturalW * s) / 2;
+	  mapZoom.y   = (rect.height - naturalH * s) / 2;
+
+	  applyMapTransform();
+	}
+
+	function setZoomAround(cx, cy, newScale) {
+	  const viewer = getViewer();
+	  const rect = viewer.getBoundingClientRect();
+
+	  const nx = cx - rect.left;
+	  const ny = cy - rect.top;
+
+	  const oldScale = mapZoom.s;
+	  const next = clamp(newScale, mapZoom.min, mapZoom.max);
+	  const ratio = next / oldScale;
+
+	  mapZoom.x = nx - (nx - mapZoom.x) * ratio;
+	  mapZoom.y = ny - (ny - mapZoom.y) * ratio;
+	  mapZoom.s = next;
+
+	  applyMapTransform();
+	}
+
+	function setZoomByFactor(factor, center = null) {
+	  const viewer = getViewer();
+	  const rect = viewer.getBoundingClientRect();
+	  const cx = center?.x ?? (rect.left + rect.width / 2);
+	  const cy = center?.y ?? (rect.top + rect.height / 2);
+	  setZoomAround(cx, cy, mapZoom.s * factor);
+	}
+
+	function resetMapZoom() {
+	  const img = getMapImg();
+	  const fit = () => requestAnimationFrame(() => {
+		fitMapToViewer('contain');
+	  });
+	  if (img.complete && img.naturalWidth) fit();
+	  else img.onload = () => { fit(); img.onload = null; };
+	}
+
+
+	function initMapZoomOnce() {
+	  if (mapZoom.inited) return;
+	  mapZoom.inited = true;
+
+	  const viewer = getViewer();
+	  const img = getMapImg();
+
+	  // Wheel zoom (mouse)
+	  viewer.addEventListener('wheel', (e) => {
+		e.preventDefault();
+		const factor = e.deltaY < 0 ? 1.12 : 1/1.12;
+		setZoomByFactor(factor, { x: e.clientX, y: e.clientY });
+	  }, { passive: false });
+
+	  // Mouse drag to pan
+	  img.addEventListener('mousedown', (e) => {
+		e.preventDefault();
+		mapZoom.panning = true;
+		img.style.cursor = 'grabbing';
+		mapZoom.startX = e.clientX - mapZoom.x;
+		mapZoom.startY = e.clientY - mapZoom.y;
+
+		const onMove = (ev) => {
+		  if (!mapZoom.panning) return;
+		  mapZoom.x = ev.clientX - mapZoom.startX;
+		  mapZoom.y = ev.clientY - mapZoom.startY;
+		  applyMapTransform();
+		};
+		const onUp = () => {
+		  mapZoom.panning = false;
+		  img.style.cursor = 'grab';
+		  window.removeEventListener('mousemove', onMove);
+		  window.removeEventListener('mouseup', onUp);
+		};
+
+		window.addEventListener('mousemove', onMove);
+		window.addEventListener('mouseup', onUp);
+	  });
+
+	  // Touch: one finger pan, two finger pinch
+	  viewer.addEventListener('touchstart', (e) => {
+		if (e.touches.length === 1) {
+		  const t = e.touches[0];
+		  mapZoom.panning = true;
+		  mapZoom.startX = t.clientX - mapZoom.x;
+		  mapZoom.startY = t.clientY - mapZoom.y;
+		} else if (e.touches.length === 2) {
+		  const [a,b] = e.touches;
+		  mapZoom.panning = false;
+		  mapZoom.pinchStartDist = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+		  mapZoom.pinchStartS = mapZoom.s;
+		}
+	  }, { passive: true });
+
+	  viewer.addEventListener('touchmove', (e) => {
+		if (e.touches.length === 1 && mapZoom.panning) {
+		  e.preventDefault();
+		  const t = e.touches[0];
+		  mapZoom.x = t.clientX - mapZoom.startX;
+		  mapZoom.y = t.clientY - mapZoom.startY;
+		  applyMapTransform();
+		} else if (e.touches.length === 2) {
+		  e.preventDefault();
+		  const [a,b] = e.touches;
+		  const dist = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+		  const cx = (a.clientX + b.clientX) / 2;
+		  const cy = (a.clientY + b.clientY) / 2;
+		  const newScale = mapZoom.pinchStartS * (dist / (mapZoom.pinchStartDist || dist));
+		  setZoomAround(cx, cy, newScale);
+		}
+	  }, { passive: false });
+
+	  viewer.addEventListener('touchend', () => { mapZoom.panning = false; });
+
+	  // Buttons
+	  document.getElementById('zoom-in')   .addEventListener('click', () => setZoomByFactor(1.2));
+	  document.getElementById('zoom-out')  .addEventListener('click', () => setZoomByFactor(1/1.2));
+	  document.getElementById('zoom-reset').addEventListener('click', resetMapZoom);
+
+	  // Double-click to zoom in at cursor
+	  viewer.addEventListener('dblclick', (e) => {
+		setZoomByFactor(1.4, { x: e.clientX, y: e.clientY });
+	  });
+	}
+	
+	window.addEventListener('resize', () => {
+	  const modal = document.getElementById('map-view-modal');
+	  if (modal.style.display === 'flex') fitMapToViewer('contain'); // <- was 'cover'
+	});
+
+	  
 	</script>
 </body>
 </html>
