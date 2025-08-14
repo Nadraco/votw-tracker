@@ -203,15 +203,12 @@
 	  transition: 0.2s;
 	}
 	
-	
-	/* Wrap the image so we can position the action buttons over it */
 	.npc-image-wrap {
 	  position: relative;
 	  display: inline-block;
 	  width: 100%;
 	}
 
-	/* Action buttons: hidden by default */
 	.npc-actions {
 	  position: absolute;
 	  top: 8px;
@@ -224,14 +221,12 @@
 	  transition: opacity .15s ease, transform .15s ease;
 	}
 
-	/* Reveal on hover of the image area */
 	.npc-image-wrap:hover .npc-actions {
 	  opacity: 1;
 	  transform: translateY(0);
 	  pointer-events: auto;
 	}
 
-	/* Colored buttons */
 	.icon-button {
 	  border: none;
 	  cursor: pointer;
@@ -251,27 +246,27 @@
 	  color: #fff;
 	}
 
-	/* Optional hover polish */
 	.icon-button:hover {
 	  filter: brightness(1.05);
 	}
-
 	
 	.npc-card:hover {
 		background: #281624;
 	}
-  .npc-card img {
+ 
+	.npc-card img {
     width: 100%;
     max-width: 300px;
     height: auto;
     border-radius: 8px;
     margin-bottom: 8px;
-  }
-  .npc-name {
+    }
+	
+    .npc-name {
     font-weight: bold;
     color: white;
     font-size: 14px;
-  }
+   }
 
 	#quest-details {
 	  font-size: 16px;
@@ -299,16 +294,13 @@
 	  margin-bottom: 12px;
 	  color: #ccc;
 	}
-
-
-	/* Wrap the image so we can position the action buttons over it */
+	
 	.npc-image-wrap {
 	  position: relative;
 	  display: inline-block;
 	  width: 100%;
 	}
 
-	/* Action buttons: hidden by default */
 	.npc-actions {
 	  position: absolute;
 	  top: 8px;
@@ -321,7 +313,6 @@
 	  transition: opacity .15s ease, transform .15s ease;
 	}
 
-	/* Reveal on hover of the image area */
 	.npc-image-wrap:hover .npc-actions {
 	  opacity: 1;
 	  transform: translateY(0);
@@ -335,27 +326,23 @@
 	  padding: 6px 8px;
 	  border-radius: 6px;
 	  line-height: 1;
-	  background-color: #5a2b49; /* matches your hover purple */
+	  background-color: #5a2b49; 
 	  color: white;
 	}
 
 	.icon-button.edit {
-	  background-color: #7a3b69; /* slightly lighter purple for edit */
+	  background-color: #7a3b69; 
 	}
 
 	.icon-button.delete {
-	  background-color: #8a2c2c; /* muted red for delete */
+	  background-color: #8a2c2c;
 	}
 
 	.icon-button:hover {
 	  filter: brightness(1.15);
 	}
-
-	/* Keep card hover as-is */
+	
 	.npc-card:hover { background: #281624; }
-
-
-
 
   /* Modal */
   #quest-modal {
@@ -868,7 +855,7 @@
 	  object-fit: contain;
 	}
 	
-	/* MAPS */
+	/* Maps */
 	.maps-sidebar h3 { color: gold; margin: 0 0 10px; }
 	.maps-sidebar input[type="text"] { width: 100%; padding: 10px; border-radius: 6px; border: none; background:#1f0f1a; color:#fff; font-size:14px; margin-bottom:12px; }
 
@@ -955,13 +942,12 @@
 	#map-view-modal .map-viewer {
 	  position: relative;
 	  flex: 1;
-	  min-height: 0;     /* important for flex children to grow */
+	  min-height: 0;     
 	  overflow: hidden;
 	  background: #1f0f1a;
 	  border-radius: 8px;
 	}
 
-	/* the zoomable image */
 	#map-view-modal img#map-modal-img {
 	  position: absolute;
 	  top: 0;
@@ -970,13 +956,13 @@
 	  cursor: grab;
 	  user-select: none;
 	  -webkit-user-drag: none;
-	  width: auto;       /* override earlier width:100% */
-	  height: auto;      /* override earlier height:auto in container */
+	  width: auto;       
+	  height: auto;     
 	  max-width: none;
 	  max-height: none;
 	}
 
-	/* zoom controls */
+	/* Zoom Controls */
 	#map-view-modal .zoom-controls {
 	  position: absolute;
 	  right: 12px;
@@ -1006,7 +992,6 @@
 	<button onclick="switchSection('maps-tab', this)">Maps</button>
 	<button onclick="switchSection('captains-quarters', this)">Captain's Quarters</button>
 	<button onclick="switchSection('business-tab', this)">Business</button>
-
   </div>
   
 	<div id="business-tab" class="content">
@@ -1014,7 +999,6 @@
 	</div>
 
 
-  
    <!-- QUEST TRACKER -->
 	<div id="quest-tracker" class="content">
     <div class="sidebar">
@@ -1276,7 +1260,7 @@
 		<!-- MAPS -->
 	<div id="maps-tab" class="content">
 	  <div class="sidebar maps-sidebar">
-		<h3>Maps Upload</h3>
+		<h3>Map	Upload</h3>
 		<input type="text" id="map-name-input" placeholder="Map name (e.g., City of X)" />
 
 		<div class="file-upload-wrapper" style="margin-bottom: 14px;">
@@ -1298,7 +1282,6 @@
 	  <div class="inner">
 		<button id="map-modal-close" onclick="closeMapModal()">&times;</button>
 
-		<!-- NEW: viewer wrapper + controls -->
 		<div class="map-viewer" id="map-viewer">
 		  <img id="map-modal-img" alt="Map" />
 		</div>
@@ -1336,8 +1319,6 @@
 	let questData = { active: [], completed: [], failed: [] };
 	let currentTab = 'active';
 	let selectedQuestIndex = null;
-	let draggedQuest = null;
-	let draggedFromStatus = null;
 	
 	const inventoryPlayers = [
 	  "Ship",
@@ -1378,21 +1359,25 @@
 	function renderQuests() {
 	  const list = document.getElementById('quest-list');
 	  list.innerHTML = '';
+
 	  const priorityFilter = document.getElementById('priority-filter').value;
 	  const typeFilter = document.getElementById('type-filter').value;
-	  const filtered = questData[currentTab].filter(q =>
+
+	  // Always start with sorted backing list
+	  const base = [...questData[currentTab]].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
+	  const filtered = base.filter(q =>
 		(!priorityFilter || q.priority === priorityFilter) &&
 		(!typeFilter || (q.type && q.type.toLowerCase() === typeFilter.toLowerCase()))
 	  );
-
-	  filtered.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
 	  filtered.forEach((quest, index) => {
 		const li = document.createElement('li');
 		li.innerText = quest.title;
 		li.classList.add(quest.priority);
 		li.setAttribute('draggable', 'true');
-		li.dataset.index = index;
+		li.dataset.id = quest.id; 
+		li.dataset.index = index; 
 
 		li.addEventListener('dragstart', handleDragStart);
 		li.addEventListener('dragover', handleDragOver);
@@ -1413,14 +1398,17 @@
 	  }
 	}
 
+	let draggedQuestId = null;
+	let draggedFromStatus = null;
+
 	function handleDragStart(e) {
-	  const index = parseInt(e.target.dataset.index);
-	  draggedQuest = questData[currentTab][index];
+	  const li = e.target.closest('li');
+	  draggedQuestId = li?.dataset.id || null;
 	  draggedFromStatus = currentTab;
 	  e.dataTransfer.effectAllowed = 'move';
 	  e.target.style.opacity = '0.5';
 	}
-
+	
 	function handleDragOver(e) {
 	  e.preventDefault();
 	  e.dataTransfer.dropEffect = 'move';
@@ -1428,56 +1416,66 @@
 
 	function handleDrop(e) {
 	  e.preventDefault();
-	  const targetIndex = parseInt(e.target.dataset.index);
-	  const targetList = questData[currentTab];
+	  const targetLi = e.target.closest('li');
+	  const targetId = targetLi?.dataset.id || null;
+	  const newStatus = currentTab;
 
-	  const fromList = questData[draggedFromStatus];
-	  const oldIndex = fromList.findIndex(q => q.id === draggedQuest.id);
-	  if (oldIndex > -1) fromList.splice(oldIndex, 1);
+	  if (!draggedQuestId) return;
 
-	  draggedQuest.status = currentTab;
-	  targetList.splice(targetIndex, 0, draggedQuest);
+	  const fromList = [...questData[draggedFromStatus]].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+	  let toList = [...questData[newStatus]].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
-	  targetList.forEach((q, idx) => {
+	  const draggedIdxInFrom = fromList.findIndex(q => q.id === draggedQuestId);
+	  if (draggedIdxInFrom === -1) return;
+	  const [dragged] = fromList.splice(draggedIdxInFrom, 1);
+	  dragged.status = newStatus;
+
+	  let insertAt = toList.length;
+	  if (targetId) {
+		const tIdx = toList.findIndex(q => q.id === targetId);
+		if (tIdx !== -1) insertAt = tIdx;
+	  }
+	  toList.splice(insertAt, 0, dragged);
+
+	  toList.forEach((q, idx) => {
 		q.sortOrder = idx;
-		db.collection("quests").doc(q.id).update({
-		  status: q.status,
-		  sortOrder: idx
-		});
+		db.collection("quests").doc(q.id).update({ status: q.status, sortOrder: idx });
 	  });
+	  if (draggedFromStatus !== newStatus) {
+		fromList.forEach((q, idx) => {
+		  q.sortOrder = idx;
+		  db.collection("quests").doc(q.id).update({ sortOrder: idx });
+		});
+	  }
 
-	  fromList.forEach((q, idx) => {
-		q.sortOrder = idx;
-		db.collection("quests").doc(q.id).update({
-		  sortOrder: idx
-		});
-	  });
+	  // Commit changes
+	  questData[draggedFromStatus] = fromList;
+	  questData[newStatus] = toList;
 
 	  renderQuests();
 	}
 
+
 	function handleDragEnd(e) {
 	  e.target.style.opacity = '';
-	  draggedQuest = null;
+	  draggedQuestId = null;  
 	  draggedFromStatus = null;
 	}
 
-	function selectQuest(index, data) {
-	  selectedQuestIndex = index;
-	  const quest = data[index];
-	  document.querySelector('.quest-title').innerText = quest.title;
-	  document.querySelector('.quest-lead').innerText = quest.lead;
+	function selectQuest(index, sourceArray = questData[currentTab]) {
+	  const quest = sourceArray[index];
+	  if (!quest) return;
+
+	  document.querySelector('.quest-title').innerText = quest.title || '';
+	  document.querySelector('.quest-lead').innerText = quest.lead || '';
 	  document.querySelector('.quest-meta').innerHTML = `
-		<div><strong>Giver:</strong> ${quest.giver}</div>
-		<div><strong>Type:</strong> ${quest.type}</div>
-		<div><strong>Location:</strong> ${quest.location}</div>
-		<div><strong>Time Remaining:</strong> ${quest.time}</div>
-		<div><strong>Notes:</strong> ${quest.notes}</div>
-		<div><strong>Reward:</strong> ${quest.reward}</div>
+		<div>${quest.priority || '-'}</div>
+		<div>${quest.type || '-'}</div>
+		<div>${quest.status || '-'}</div>
+		<div>${quest.sortOrder ?? '-'}</div>
+		<div>${quest.id || '-'}</div>
+		<div>${quest.description || '-'}</div>
 	  `;
-	  document.querySelectorAll('.quest-list li').forEach((li, i) =>
-		li.classList.toggle('active', i === index)
-	  );
 	}
 
 	function openModal(mode = 'add', quest = null) {
@@ -1549,14 +1547,27 @@
 	}
 
 	db.collection("quests").onSnapshot(snapshot => {
+	  // Reset questData
 	  questData = { active: [], completed: [], failed: [] };
+
 	  snapshot.forEach(doc => {
 		const quest = doc.data();
 		quest.id = doc.id;
-		if (!quest.status) return;
-		if (!questData[quest.status]) return;
-		questData[quest.status].push(quest);
+
+		const statusKey = (quest.status || '').toLowerCase().trim();
+		if (statusKey && questData[statusKey]) {
+		  questData[statusKey].push(quest);
+		}
 	  });
+
+	  // Sort each list before rendering
+	  ["active", "completed", "failed"].forEach(st => {
+		questData[st].sort((a, b) => {
+		  const so = (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+		  return so !== 0 ? so : String(a.title || '').localeCompare(String(b.title || ''));
+		});
+	  });
+
 	  renderQuests();
 	});
 
@@ -1571,28 +1582,35 @@
 		tab.classList.remove('drag-over');
 	  });
 
-	  tab.addEventListener('drop', e => {
-		e.preventDefault();
-		tab.classList.remove('drag-over');
-		const newStatus = tab.textContent.trim().toLowerCase();
-		if (!draggedQuest || newStatus === draggedQuest.status) return;
+		tab.addEventListener('drop', e => {
+		  e.preventDefault();
+		  tab.classList.remove('drag-over');
+		  const newStatus = tab.textContent.trim().toLowerCase();
+		  if (!draggedQuestId) return;
 
-		const fromList = questData[draggedQuest.status];
-		const oldIndex = fromList.findIndex(q => q.id === draggedQuest.id);
-		if (oldIndex > -1) fromList.splice(oldIndex, 1);
+		  if (draggedFromStatus === newStatus) { renderQuests(); switchTab(newStatus); return; }
 
-		draggedQuest.status = newStatus;
-		draggedQuest.sortOrder = questData[newStatus].length;
-		questData[newStatus].push(draggedQuest);
+		  const fromList = [...questData[draggedFromStatus]].sort((a,b)=>(a.sortOrder??0)-(b.sortOrder??0));
+		  let toList     = [...questData[newStatus]].sort((a,b)=>(a.sortOrder??0)-(b.sortOrder??0));
 
-		db.collection("quests").doc(draggedQuest.id).update({
-		  status: newStatus,
-		  sortOrder: draggedQuest.sortOrder
-		});
+		  const idx = fromList.findIndex(q => q.id === draggedQuestId);
+		  if (idx === -1) return;
+		  const [item] = fromList.splice(idx,1);
+		  item.status = newStatus;
+		  item.sortOrder = toList.length;
+		  toList.push(item);
 
-		renderQuests();
-		switchTab(newStatus);
-	  });
+		  db.collection("quests").doc(item.id).update({ status: newStatus, sortOrder: item.sortOrder });
+
+		  // reindex the fromList too
+		  fromList.forEach((q, i) => db.collection("quests").doc(q.id).update({ sortOrder: i }));
+
+		  questData[draggedFromStatus] = fromList;
+		  questData[newStatus] = toList;
+
+		  renderQuests();
+		  switchTab(newStatus);
+		});	  
 	});
 
 	let npcs = [];
@@ -1623,12 +1641,11 @@
 
 	  const countries = [...new Set(npcs.map(n => n.country))];
 
-	  // Restore previously selected country (including "All")
 	  const savedCountry = localStorage.getItem('activeCountry');
 	  if (savedCountry && (savedCountry === ALL_COUNTRY || countries.includes(savedCountry))) {
 		activeCountry = savedCountry;
 	  } else if (!activeCountry) {
-		// Default to "All" if nothing is chosen yet
+
 		activeCountry = ALL_COUNTRY;
 	  }
 	}
@@ -1839,7 +1856,7 @@
 	  const countries = [...new Set(npcs.map(n => n.country))].sort();
 	  countryButtons.innerHTML = '';
 
-	  // "All" button first
+	  // All Button First
 	  const allBtn = document.createElement('button');
 	  allBtn.textContent = ALL_COUNTRY;
 	  allBtn.classList.toggle('active', activeCountry === ALL_COUNTRY);
@@ -1852,7 +1869,7 @@
 	  };
 	  countryButtons.appendChild(allBtn);
 
-	  // Then the individual countries
+	  // Individual Countries
 	  countries.forEach(country => {
 		const btn = document.createElement('button');
 		btn.textContent = country;
@@ -1867,8 +1884,7 @@
 		countryButtons.appendChild(btn);
 	  });
 	}
-
-
+		
 	function renderNPCs() {
 	  const statusFilter = document.getElementById('npc-status-filter').value.toLowerCase();
 
@@ -1970,8 +1986,6 @@
 		npcContainer.appendChild(regionDiv);
 	  });
 	}
-
-
 
 	document.addEventListener('DOMContentLoaded', async () => {
 	  const savedSection = localStorage.getItem('activeSection') || 'quest-tracker';
@@ -2519,7 +2533,7 @@
 	  } else if (table.dataset.sortCol == columnIndex) {
 		isAsc = table.dataset.sortDir !== 'asc';
 	  } else {
-		isAsc = !(isNumericCol || isBooleanCol); // numbers/booleans → desc; text/rarity → asc
+		isAsc = !(isNumericCol || isBooleanCol); // numbers/booleans desc, text/rarity asc
 	  }
 
 	  filteredRows.sort((ra, rb) => {
@@ -3025,10 +3039,9 @@
 	  }
 	  
 	/* Maps */
-	const MAP_BUCKET = 'map-images'; // create this storage bucket in Supabase
+	const MAP_BUCKET = 'map-images'; 
 	let maps = [];
 
-	/* Render all maps to the grid */
 	function renderMaps() {
 	  const grid = document.getElementById('maps-grid');
 	  if (!grid) return;
@@ -3070,12 +3083,11 @@
 	  });
 	}
 
-	/* Fetch maps from Supabase */
 	async function fetchMaps() {
 	  const { data, error } = await supabase
 		.from('maps')
 		.select('id, name, image_url, path, created_at')
-		.order('created_at', { ascending: false });
+		.order('name', { ascending: true }); // sort alphabetically by name
 
 	  if (error) {
 		console.error('Failed to load maps:', error);
@@ -3085,7 +3097,6 @@
 	  renderMaps();
 	}
 
-	/* Upload a map image + row */
 	async function uploadMap() {
 	  const name = (document.getElementById('map-name-input').value || '').trim();
 	  const file = document.getElementById('map-image-upload').files[0];
@@ -3115,18 +3126,15 @@
 		return;
 	  }
 
-	  // reset form
 	  document.getElementById('map-name-input').value = '';
 	  document.getElementById('map-image-upload').value = '';
 	  document.getElementById('map-file-label').textContent = 'Choose Image';
 	  fetchMaps();
 	}
 
-	/* Delete a map + storage file */
 	async function deleteMap(id, path) {
 	  if (!confirm('Delete this map?')) return;
 
-	  // try to delete storage first (if it fails, still remove db row)
 	  if (path) {
 		const { error: stErr } = await supabase.storage.from(MAP_BUCKET).remove([path]);
 		if (stErr) console.warn('Storage delete issue:', stErr.message);
@@ -3150,7 +3158,6 @@
 
 	  modal.style.display = 'flex';
 
-	  // init listeners once, then fit image to viewer on load (start at cover)
 	  initMapZoomOnce();
 	  resetMapZoom();
 	}
@@ -3159,7 +3166,7 @@
 	  const modal = document.getElementById('map-view-modal');
 	  modal.style.display = 'none';
 	  const img = document.getElementById('map-modal-img');
-	  img.src = ''; // free memory
+	  img.src = ''; 
 	}
 
 	function displayMapFileName(input) {
@@ -3167,7 +3174,7 @@
 	  label.textContent = input.files?.[0]?.name ? `File: ${input.files[0].name}` : 'Choose Image';
 	}
 
-	// -------- Map modal zoom/pan ----------
+	// Map Modal Zoom
 	let mapZoom = {
 	  s: 1, min: 1, max: 8,
 	  x: 0, y: 0,
@@ -3194,16 +3201,13 @@
 	  const naturalW = img.naturalWidth || 1;
 	  const naturalH = img.naturalHeight || 1;
 
-	  // contain vs cover
 	  const sContain = Math.min(rect.width / naturalW, rect.height / naturalH);
 	  const sCover   = Math.max(rect.width / naturalW, rect.height / naturalH);
 	  const s        = mode === 'cover' ? sCover : sContain;
 
-	  // allow zooming out to see the whole image
 	  mapZoom.min = sContain;
 	  mapZoom.s   = s;
 
-	  // center the image
 	  mapZoom.x   = (rect.width  - naturalW * s) / 2;
 	  mapZoom.y   = (rect.height - naturalH * s) / 2;
 
@@ -3253,14 +3257,14 @@
 	  const viewer = getViewer();
 	  const img = getMapImg();
 
-	  // Wheel zoom (mouse)
+	  // Mouse Wheel Zoom
 	  viewer.addEventListener('wheel', (e) => {
 		e.preventDefault();
 		const factor = e.deltaY < 0 ? 1.12 : 1/1.12;
 		setZoomByFactor(factor, { x: e.clientX, y: e.clientY });
 	  }, { passive: false });
 
-	  // Mouse drag to pan
+	  // Mouse Pan
 	  img.addEventListener('mousedown', (e) => {
 		e.preventDefault();
 		mapZoom.panning = true;
@@ -3285,7 +3289,6 @@
 		window.addEventListener('mouseup', onUp);
 	  });
 
-	  // Touch: one finger pan, two finger pinch
 	  viewer.addEventListener('touchstart', (e) => {
 		if (e.touches.length === 1) {
 		  const t = e.touches[0];
@@ -3325,7 +3328,6 @@
 	  document.getElementById('zoom-out')  .addEventListener('click', () => setZoomByFactor(1/1.2));
 	  document.getElementById('zoom-reset').addEventListener('click', resetMapZoom);
 
-	  // Double-click to zoom in at cursor
 	  viewer.addEventListener('dblclick', (e) => {
 		setZoomByFactor(1.4, { x: e.clientX, y: e.clientY });
 	  });
@@ -3333,9 +3335,8 @@
 	
 	window.addEventListener('resize', () => {
 	  const modal = document.getElementById('map-view-modal');
-	  if (modal.style.display === 'flex') fitMapToViewer('contain'); // <- was 'cover'
+	  if (modal.style.display === 'flex') fitMapToViewer('contain'); 
 	});
-
 	  
 	</script>
 </body>
