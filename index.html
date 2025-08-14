@@ -993,7 +993,7 @@
 	.npc-status {
 	  font-size: 16px;  
 /*	  font-weight: bold;*/
-	  color: white;
+	  color: White;
 	}
 
 	#npc-library .sidebar {
@@ -2033,7 +2033,11 @@
 			card.appendChild(name);
 				const raceDiv = document.createElement('div');
 				raceDiv.classList.add('npc-race');
-				raceDiv.textContent = `Race: ${npc.race && npc.race.trim() !== '' ? npc.race : '-'}`;
+				const raceValue = document.createElement('span');
+				raceValue.style.fontWeight = 'bold';
+				raceValue.textContent = npc.race && npc.race.trim() !== '' ? npc.race : '-';
+				raceDiv.innerHTML = 'Race: ';
+				raceDiv.appendChild(raceValue);
 				card.appendChild(raceDiv);
 			card.appendChild(status);
 
