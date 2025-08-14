@@ -249,24 +249,22 @@
 	.icon-button:hover {
 	  filter: brightness(1.05);
 	}
-	
+
 	.npc-card:hover {
 		background: #281624;
 	}
- 
-	.npc-card img {
+  .npc-card img {
     width: 100%;
     max-width: 300px;
     height: auto;
     border-radius: 8px;
     margin-bottom: 8px;
-    }
-	
-    .npc-name {
+  }
+  .npc-name {
     font-weight: bold;
     color: white;
     font-size: 14px;
-   }
+  }
 
 	#quest-details {
 	  font-size: 16px;
@@ -294,7 +292,7 @@
 	  margin-bottom: 12px;
 	  color: #ccc;
 	}
-	
+
 	.npc-image-wrap {
 	  position: relative;
 	  display: inline-block;
@@ -335,14 +333,15 @@
 	}
 
 	.icon-button.delete {
-	  background-color: #8a2c2c;
+	  background-color: #8a2c2c; 
 	}
 
 	.icon-button:hover {
 	  filter: brightness(1.15);
 	}
-	
+
 	.npc-card:hover { background: #281624; }
+
 
   /* Modal */
   #quest-modal {
@@ -607,7 +606,7 @@
 	}
 	
 	.inventory-section {
-	  margin-bottom: 40px; /* Adds larger gap between inventory sections */
+	  margin-bottom: 40px; 
 	  border: 1px solid #4d2d3e;
 	  border-radius: 10px;
 	  background: #2b162a;
@@ -626,7 +625,7 @@
   .inventory-table th:nth-child(1),
   .inventory-table td:nth-child(1) { width: 15%; } /* Item */
   .inventory-table th:nth-child(2),
-  .inventory-table td:nth-child(2) { width: 5%; }  /* Qty */
+  .inventory-table td:nth-child(2) { width: 5%; }  /* Quantity */
   .inventory-table th:nth-child(3),
   .inventory-table td:nth-child(3) { width: 8%; }  /* Weight */
   .inventory-table th:nth-child(4),
@@ -717,7 +716,7 @@
 	
 	/* Center only Qty, Weight, Value, Attunement, and Attuned columns */
 	#inventory-tab .inventory-table th:nth-child(2),
-	#inventory-tab .inventory-table td:nth-child(2), /* Qty */
+	#inventory-tab .inventory-table td:nth-child(2), /* Quantity */
 	#inventory-tab .inventory-table th:nth-child(3),
 	#inventory-tab .inventory-table td:nth-child(3), /* Weight (lb) */
 	#inventory-tab .inventory-table th:nth-child(4),
@@ -938,11 +937,10 @@
 	  font-size: 22px; cursor: pointer;
 	}
 	
-	/* viewer fills remaining height */
 	#map-view-modal .map-viewer {
 	  position: relative;
 	  flex: 1;
-	  min-height: 0;     
+	  min-height: 0;    
 	  overflow: hidden;
 	  background: #1f0f1a;
 	  border-radius: 8px;
@@ -957,7 +955,7 @@
 	  user-select: none;
 	  -webkit-user-drag: none;
 	  width: auto;       
-	  height: auto;     
+	  height: auto;    
 	  max-width: none;
 	  max-height: none;
 	}
@@ -980,7 +978,28 @@
 	  font-weight: 600;
 	}
 	#map-view-modal .zoom-controls .icon-button:hover { filter: brightness(1.1); }
+	
+	/* NPC Name */
+	.npc-name {
+	  font-size: 18px;   
+	  font-weight: bold;
+	  color: gold;      
+	  margin-bottom: 4px;
+	}
 
+	/* Race and Status Labels */
+	.npc-race,
+	.npc-status {
+	  font-size: 16px;  
+	  font-weight: bold;
+	  color: white;
+	}
+
+	#npc-library .sidebar {
+	  height: 100%;              
+	  overflow-y: auto;          
+	  flex-shrink: 0;              
+	}
 </style>
 
 </head>
@@ -992,6 +1011,7 @@
 	<button onclick="switchSection('maps-tab', this)">Maps</button>
 	<button onclick="switchSection('captains-quarters', this)">Captain's Quarters</button>
 	<button onclick="switchSection('business-tab', this)">Business</button>
+
   </div>
   
 	<div id="business-tab" class="content">
@@ -999,6 +1019,7 @@
 	</div>
 
 
+  
    <!-- QUEST TRACKER -->
 	<div id="quest-tracker" class="content">
     <div class="sidebar">
@@ -1105,8 +1126,12 @@
 			<option value="">Select Region</option>
 		  </select>
 		  <input type="text" id="npc-new-region" placeholder="Or add new region" />
-
-		  <!-- Status -->
+		  
+		  <!-- Race -->
+		<label for="npc-race-input" style="margin-bottom: 6px; font-size: 14px;">Race</label>
+		<input type="text" id="npc-race-input" placeholder="Enter Race" style="margin-bottom: 12px;" />
+		
+		 <!-- Status -->
 		  <label for="npc-status-select" style="margin-bottom: 6px; font-size: 14px;">Status</label>
 		  <select id="npc-status-select" style="margin-bottom: 12px;">
 			<option value="Alive">Alive</option>
@@ -1139,13 +1164,14 @@
 			
 			<select id="edit-npc-country" onchange="populateEditRegion()" style="margin-bottom:10px;"></select>
 			<select id="edit-npc-region" style="margin-bottom:10px;"></select>
+			<input type="text" id="edit-npc-race" class="npc-input" placeholder="Race" />
 			<select id="edit-npc-status" style="margin-bottom:10px;">
 			  <option value="Alive">Alive</option>
 			  <option value="Dead">Dead</option>
 			  <option value="Unknown">Unknown</option>
 			</select>
 
-			<!-- Styled image upload -->
+			<!-- Styled Image Upload -->
 			<div class="file-upload-wrapper" style="margin-bottom:14px;">
 			  <label for="edit-npc-image-upload" class="gold-button file-label" id="edit-file-label">Choose New Image</label>
 			  <input type="file" id="edit-npc-image-upload" onchange="displayEditFileName(this)" />
@@ -1304,7 +1330,6 @@
 	  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkYWVsenhtanBjYnl6Y2dmd3pyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMzOTA2MDQsImV4cCI6MjA2ODk2NjYwNH0.7yDlBMJxoaJCjn4eD7ydRQAKgTu1UaneAAv2unGnuVc'
 	);
 
-	// Firebase init
 	firebase.initializeApp({
 	  apiKey: "AIzaSyDxSKU85aMBBL6jNvHiaihnWA-vApp-dVk",
 	  authDomain: "votw-tracker.firebaseapp.com",
@@ -1318,7 +1343,7 @@
 	
 	let questData = { active: [], completed: [], failed: [] };
 	let currentTab = 'active';
-	let selectedQuestIndex = null;
+	let selectedQuestId = null;
 	
 	const inventoryPlayers = [
 	  "Ship",
@@ -1363,7 +1388,6 @@
 	  const priorityFilter = document.getElementById('priority-filter').value;
 	  const typeFilter = document.getElementById('type-filter').value;
 
-	  // Always start with sorted backing list
 	  const base = [...questData[currentTab]].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
 	  const filtered = base.filter(q =>
@@ -1384,18 +1408,22 @@
 		li.addEventListener('drop', handleDrop);
 		li.addEventListener('dragend', handleDragEnd);
 
-		li.onclick = () => selectQuest(index, filtered);
-		if (index === 0) li.classList.add('active');
+		li.onclick = () => selectQuestById(quest.id, filtered);
+
 		list.appendChild(li);
 	  });
 
-	  if (filtered.length > 0) {
-		selectQuest(0, filtered);
-	  } else {
-		document.querySelector('.quest-title').innerText = 'No quests match the filters';
-		document.querySelector('.quest-lead').innerText = '';
-		document.querySelector('.quest-meta').innerHTML = '<div>-</div>'.repeat(6);
-	  }
+		if (filtered.length > 0) {
+
+		  const stillVisible = filtered.some(q => q.id === selectedQuestId);
+		  selectQuestById(stillVisible ? selectedQuestId : filtered[0].id, filtered);
+		} else {
+		  selectedQuestId = null;
+		  document.querySelector('.quest-title').innerText = 'No quests match the filters';
+		  document.querySelector('.quest-lead').innerText = '';
+		  document.querySelector('.quest-meta').innerHTML = '<div>-</div>'.repeat(6);
+		}
+
 	}
 
 	let draggedQuestId = null;
@@ -1448,7 +1476,7 @@
 		});
 	  }
 
-	  // Commit changes
+	  // Commit Changes
 	  questData[draggedFromStatus] = fromList;
 	  questData[newStatus] = toList;
 
@@ -1458,25 +1486,54 @@
 
 	function handleDragEnd(e) {
 	  e.target.style.opacity = '';
-	  draggedQuestId = null;  
+	  draggedQuestId = null;     
 	  draggedFromStatus = null;
 	}
 
-	function selectQuest(index, sourceArray = questData[currentTab]) {
-	  const quest = sourceArray[index];
-	  if (!quest) return;
+	function selectQuestById(id, sourceArray = null) {
+	  const found = findQuestById(id);
+	  if (!found) return;
 
-	  document.querySelector('.quest-title').innerText = quest.title || '';
-	  document.querySelector('.quest-lead').innerText = quest.lead || '';
-	  document.querySelector('.quest-meta').innerHTML = `
-		<div>${quest.priority || '-'}</div>
-		<div>${quest.type || '-'}</div>
-		<div>${quest.status || '-'}</div>
-		<div>${quest.sortOrder ?? '-'}</div>
-		<div>${quest.id || '-'}</div>
-		<div>${quest.description || '-'}</div>
-	  `;
+	  selectedQuestId = id;
+
+	  const q = found.quest;
+	  document.querySelector('.quest-title').innerText = q.title || '';
+	  document.querySelector('.quest-lead').innerText = q.lead || '';
+	  
+		const cap = str => str ? str.charAt(0).toUpperCase() + str.slice(1) : '-';
+
+		document.querySelector('.quest-meta').innerHTML = `
+		  <div><strong>Title:</strong> ${q.title || '-'}</div>
+		  <div><strong>Lead:</strong> ${q.lead || '-'}</div>
+		  <div><strong>Giver:</strong> ${q.giver || '-'}</div>
+		  <div><strong>Type:</strong> ${q.type || '-'}</div>
+		  <div><strong>Location:</strong> ${q.location || '-'}</div>
+		  <div><strong>Time Remaining:</strong> ${q.timeRemaining || '-'}</div>
+		  <div><strong>Notes:</strong> ${q.notes || '-'}</div>
+		  <div><strong>Reward:</strong> ${q.reward || '-'}</div>
+		  <div><strong>Priority:</strong> ${cap(q.priority)}</div>
+		  <div><strong>Status:</strong> ${cap(q.status)}</div>
+		`;
+
+	  highlightSelectedListItem();
 	}
+
+	function findQuestById(id) {
+	  if (!id) return null;
+	  for (const st of ['active','completed','failed']) {
+		const idx = questData[st].findIndex(q => q.id === id);
+		if (idx !== -1) return { quest: questData[st][idx], status: st, index: idx };
+	  }
+	  return null;
+	}
+
+	function highlightSelectedListItem() {
+	  const list = document.getElementById('quest-list');
+	  list.querySelectorAll('li').forEach(li => {
+		li.classList.toggle('active', li.dataset.id === selectedQuestId);
+	  });
+	}
+
 
 	function openModal(mode = 'add', quest = null) {
 	  const modal = document.getElementById('quest-modal');
@@ -1531,23 +1588,29 @@
 	}
 
 	function editQuest() {
-	  if (selectedQuestIndex === null) return;
-	  openModal('edit', questData[currentTab][selectedQuestIndex]);
+	  if (!selectedQuestId) return alert("Select a quest first.");
+	  const found = findQuestById(selectedQuestId);
+	  if (!found) return alert("Quest not found.");
+	  openModal('edit', found.quest);
 	}
 
 	function deleteQuest() {
-	  const quest = questData[currentTab][selectedQuestIndex];
-	  if (!quest) return;
-	  if (confirm(`Delete quest "${quest.title}"?`)) {
-		db.collection("quests").doc(quest.id).delete().then(() => {
+	  if (!selectedQuestId) return alert("Select a quest first.");
+	  const found = findQuestById(selectedQuestId);
+	  if (!found) return alert("Quest not found.");
+
+	  if (confirm(`Delete quest "${found.quest.title}"?`)) {
+		db.collection("quests").doc(found.quest.id).delete().then(() => {
 		  alert("Deleted.");
+		  selectedQuestId = null;
 		  renderQuests();
 		});
 	  }
 	}
 
+
 	db.collection("quests").onSnapshot(snapshot => {
-	  // Reset questData
+
 	  questData = { active: [], completed: [], failed: [] };
 
 	  snapshot.forEach(doc => {
@@ -1560,7 +1623,6 @@
 		}
 	  });
 
-	  // Sort each list before rendering
 	  ["active", "completed", "failed"].forEach(st => {
 		questData[st].sort((a, b) => {
 		  const so = (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
@@ -1571,6 +1633,7 @@
 	  renderQuests();
 	});
 
+	
 	// Drag Between Status Tabs
 	document.querySelectorAll('.tab').forEach(tab => {
 	  tab.addEventListener('dragover', e => {
@@ -1627,7 +1690,7 @@
 	async function fetchNPCs() {
 	  const { data, error } = await supabase
 		.from('npcs')
-		.select('id, name, country, region, image_url, status');
+		.select('id, name, country, region, image_url, race, status');
 
 	  if (error) {
 		console.error("Failed to load NPCs:", error);
@@ -1641,11 +1704,12 @@
 
 	  const countries = [...new Set(npcs.map(n => n.country))];
 
+
 	  const savedCountry = localStorage.getItem('activeCountry');
 	  if (savedCountry && (savedCountry === ALL_COUNTRY || countries.includes(savedCountry))) {
 		activeCountry = savedCountry;
 	  } else if (!activeCountry) {
-
+		// Default to "All" if nothing is chosen yet
 		activeCountry = ALL_COUNTRY;
 	  }
 	}
@@ -1687,14 +1751,16 @@
 
 	async function uploadNPCImage() {
 	  const file = document.getElementById('npc-image-upload').files[0];
-		const countrySelect = document.getElementById('npc-country-select').value.trim();
-		const countryInput = document.getElementById('npc-new-country').value.trim();
-		const regionSelect = document.getElementById('npc-region-select').value.trim();
-		const regionInput = document.getElementById('npc-new-region').value.trim();
-		const country = capitalizeWords(countryInput || countrySelect);
-		const region = capitalizeWords(regionInput || regionSelect);
-	  const name = document.getElementById('npc-name-input').value.trim();
-	  const status = document.getElementById('npc-status-select').value.trim();
+	  const countrySelect = document.getElementById('npc-country-select').value.trim();
+	  const countryInput  = document.getElementById('npc-new-country').value.trim();
+	  const regionSelect  = document.getElementById('npc-region-select').value.trim();
+	  const regionInput   = document.getElementById('npc-new-region').value.trim();
+	  const country = capitalizeWords(countryInput || countrySelect);
+	  const region  = capitalizeWords(regionInput  || regionSelect);
+	  const name    = document.getElementById('npc-name-input').value.trim();
+	  const raceRaw = document.getElementById('npc-race-input').value || '';
+	  const race    = raceRaw.trim() !== '' ? raceRaw.trim() : '-';
+	  const status  = document.getElementById('npc-status-select').value.trim();
 
 	  if (!file || !country || !region || !name) {
 		alert("Please complete all fields.");
@@ -1703,57 +1769,42 @@
 
 	  const path = `${country}/${region}/${Date.now()}_${file.name}`.replace(/\s+/g, '_');
 
-	  const { error } = await supabase
-		.storage
-		.from('npc-images')
-		.upload(path, file);
+	  const { error } = await supabase.storage.from('npc-images').upload(path, file);
+	  if (error) {
+		console.error("Upload failed:", error.message);
+		alert("Upload failed: " + error.message);
+		return;
+	  }
 
-		if (error) {
-		  console.error("Upload failed:", error.message);
-		  alert("Upload failed: " + error.message);
-		  return;
-		}
-
-	  const { data: urlData } = supabase
-		.storage
-		.from('npc-images')
-		.getPublicUrl(path);
-
+	  const { data: urlData } = supabase.storage.from('npc-images').getPublicUrl(path);
 	  const imageUrl = urlData?.publicUrl || '';
 
-		if (window.currentEditingNPC) {
-		  await supabase.from('npcs').update({
-			name,
-			country,
-			region,
-			image_url: imageUrl,
-			status
-		  }).eq('id', window.currentEditingNPC);
+	  // ✅ this was missing
+	  if (window.currentEditingNPC) {
+		await supabase.from('npcs').update({
+		  name, country, region, image_url: imageUrl, status, race
+		}).eq('id', window.currentEditingNPC);
 
-		  window.currentEditingNPC = null;
-		  alert("NPC updated!");
-		} else {
-		  await supabase.from('npcs').insert([{
-			name,
-			country,
-			region,
-			image_url: imageUrl,
-			status
-		  }]);
-		  alert("NPC added!");
-		  await fetchNPCs();
-			populateCountrySelect();
-			renderCountryButtons();
-			renderNPCs();
-		}
- 
-	  //Clear Form
+		window.currentEditingNPC = null;
+		alert("NPC updated!");
+	  } else {
+		await supabase.from('npcs').insert([{
+		  name, country, region, image_url: imageUrl, race, status
+		}]);
+		alert("NPC added!");
+		await fetchNPCs();
+		populateCountrySelect();
+		renderCountryButtons();
+		renderNPCs();
+	  }
+
 	  document.getElementById('npc-image-upload').value = '';
 	  document.getElementById('file-label').textContent = 'Choose Image';
 	  document.getElementById('npc-country-select').value = '';
 	  document.getElementById('npc-region-select').innerHTML = '<option value="">Select Region</option>';
 	  document.getElementById('npc-region-select').disabled = true;
 	  document.getElementById('npc-name-input').value = '';
+	  document.getElementById('npc-race-input').value = '';
 	  document.getElementById('npc-status-select').value = 'Unknown';
 	}
 
@@ -1766,6 +1817,8 @@
 		  document.getElementById('edit-npc-name').value = npc.name;
 		  document.getElementById('edit-npc-country').innerHTML = getCountryOptions(npc.country);
 		  populateEditRegion(npc.country, npc.region);
+		  document.getElementById('edit-npc-race').value = (npc.race && npc.race !== '-') ? npc.race : '';
+		  document.getElementById('edit-npc-race').placeholder = 'Race';
 		  document.getElementById('edit-npc-status').value = npc.status || 'Unknown';
 		  document.getElementById('npc-edit-modal').style.display = 'flex';
 		}
@@ -1786,12 +1839,17 @@
 		async function submitNPCEdit() {
 		  const id = window.currentEditingNPC;
 		  const name = document.getElementById('edit-npc-name').value.trim();
-			const countryRaw = document.getElementById('edit-npc-country').value;
-			const regionRaw = document.getElementById('edit-npc-region').value;
-			const country = capitalizeWords(countryRaw);
-			const region = capitalizeWords(regionRaw);
+
+		  const countryRaw = document.getElementById('edit-npc-country').value;
+		  const regionRaw  = document.getElementById('edit-npc-region').value;
+		  const country = capitalizeWords(countryRaw);
+		  const region  = capitalizeWords(regionRaw);
+
+		  const raceRaw = document.getElementById('edit-npc-race')?.value || '';
+		  const race    = raceRaw.trim() !== '' ? raceRaw.trim() : '-';
+
 		  const status = document.getElementById('edit-npc-status').value;
-		  const file = document.getElementById('edit-npc-image-upload').files[0];
+		  const file   = document.getElementById('edit-npc-image-upload').files[0];
 
 		  if (!id || !name || !country || !region) {
 			return alert("Please complete all fields.");
@@ -1802,24 +1860,16 @@
 		  if (file) {
 			const path = `${country}/${region}/${Date.now()}_${file.name}`.replace(/\s+/g, '_');
 			const { error: uploadErr } = await supabase.storage.from('npc-images').upload(path, file);
-
-			if (uploadErr) {
-			  alert("Image upload failed.");
-			  return;
-			}
-
+			if (uploadErr) { alert("Image upload failed."); return; }
 			const { data } = supabase.storage.from('npc-images').getPublicUrl(path);
 			image_url = data.publicUrl;
 		  }
 
 		  const { error } = await supabase.from('npcs').update({
-			name, country, region, status, image_url
+			name, country, region, status, race, image_url
 		  }).eq('id', id);
 
-		  if (error) {
-			alert("Failed to update NPC.");
-			return;
-		  }
+		  if (error) { alert("Failed to update NPC."); return; }
 
 		  await fetchNPCs();
 		  populateCountrySelect();
@@ -1829,6 +1879,7 @@
 		  alert("NPC updated!");
 		  closeNPCEditModal();
 		}
+
 
 		function closeNPCEditModal() {
 		  document.getElementById('npc-edit-modal').style.display = 'none';
@@ -1856,7 +1907,7 @@
 	  const countries = [...new Set(npcs.map(n => n.country))].sort();
 	  countryButtons.innerHTML = '';
 
-	  // All Button First
+	  // "All" button first
 	  const allBtn = document.createElement('button');
 	  allBtn.textContent = ALL_COUNTRY;
 	  allBtn.classList.toggle('active', activeCountry === ALL_COUNTRY);
@@ -1884,7 +1935,8 @@
 		countryButtons.appendChild(btn);
 	  });
 	}
-		
+
+
 	function renderNPCs() {
 	  const statusFilter = document.getElementById('npc-status-filter').value.toLowerCase();
 
@@ -1975,6 +2027,10 @@
 
 			card.appendChild(imageWrap);
 			card.appendChild(name);
+				const raceDiv = document.createElement('div');
+				raceDiv.classList.add('npc-race');
+				raceDiv.textContent = `Race: ${npc.race && npc.race.trim() !== '' ? npc.race : '-'}`;
+				card.appendChild(raceDiv);
 			card.appendChild(status);
 
 			tileContainer.appendChild(card);
@@ -2035,7 +2091,6 @@
 			loadCorkboard();
 		}
 	});
-	
 
 	function displayFileName(input) {
 	  const label = document.getElementById('file-label');
@@ -2131,7 +2186,7 @@
 	  return num.toLocaleString(undefined, opts);
 	}
 
-	// Only Show Decimal If Needed
+	// Show Decimal If Needed
 	function fmt1IfNeeded(n) {
 	  const num = typeof n === 'string' ? parseFloat(n.replace(/,/g, '')) : Number(n);
 	  if (!isFinite(num)) return n ?? '';
@@ -2498,7 +2553,7 @@
 	  const player = table.dataset.player || 'global';
 
 	  // Column Types by Index
-	  const NUMERIC_COLS = new Set([1, 2, 3]); // Qty, Weight, Value
+	  const NUMERIC_COLS = new Set([1, 2, 3]); // Quantity, Weight, Value
 	  const BOOLEAN_COLS = new Set([7]);       // Attuned
 	  const RARITY_COL = 5;                    // Rarity
 
@@ -2939,7 +2994,7 @@
 	  if (item.type === 'image') {
 		const img = document.createElement('img');
 		img.className = 'cork-image';
-		img.src = corkPublicUrl(item.path);  // cache-busted URL
+		img.src = corkPublicUrl(item.path);  
 		img.alt = item.path.split('/').pop();
 		img.draggable = false;
 		img.addEventListener('dragstart', e => e.preventDefault());
@@ -3003,7 +3058,6 @@
 		window.removeEventListener('mouseup', onUp);
 	  }
 
-	  // RESIZE
 	  let rsStartX, rsStartY, rsStartW, rsStartH, resizing = false;
 
 	  function rsDown(e) {
@@ -3039,7 +3093,7 @@
 	  }
 	  
 	/* Maps */
-	const MAP_BUCKET = 'map-images'; 
+	const MAP_BUCKET = 'map-images';
 	let maps = [];
 
 	function renderMaps() {
@@ -3083,11 +3137,12 @@
 	  });
 	}
 
+	/* Fetch Maps from Supabase */
 	async function fetchMaps() {
 	  const { data, error } = await supabase
 		.from('maps')
 		.select('id, name, image_url, path, created_at')
-		.order('name', { ascending: true }); // sort alphabetically by name
+		.order('name', { ascending: true }); // Sort Alphabetically
 
 	  if (error) {
 		console.error('Failed to load maps:', error);
@@ -3174,7 +3229,7 @@
 	  label.textContent = input.files?.[0]?.name ? `File: ${input.files[0].name}` : 'Choose Image';
 	}
 
-	// Map Modal Zoom
+	//Map Zoom/Pan
 	let mapZoom = {
 	  s: 1, min: 1, max: 8,
 	  x: 0, y: 0,
@@ -3257,14 +3312,14 @@
 	  const viewer = getViewer();
 	  const img = getMapImg();
 
-	  // Mouse Wheel Zoom
+	  // Mouse Zoom
 	  viewer.addEventListener('wheel', (e) => {
 		e.preventDefault();
 		const factor = e.deltaY < 0 ? 1.12 : 1/1.12;
 		setZoomByFactor(factor, { x: e.clientX, y: e.clientY });
 	  }, { passive: false });
 
-	  // Mouse Pan
+	  // Mouse Drag
 	  img.addEventListener('mousedown', (e) => {
 		e.preventDefault();
 		mapZoom.panning = true;
@@ -3337,7 +3392,7 @@
 	  const modal = document.getElementById('map-view-modal');
 	  if (modal.style.display === 'flex') fitMapToViewer('contain'); 
 	});
-	  
+  
 	</script>
 </body>
 </html>
