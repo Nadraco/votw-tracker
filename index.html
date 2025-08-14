@@ -1808,83 +1808,98 @@
 	  }
 	}
 
+	function fmt(n, opts = {}) {
+	  const num = typeof n === 'string' ? parseFloat(n.replace(/,/g, '')) : Number(n);
+	  if (!isFinite(num)) return n ?? '';
+	  return num.toLocaleString(undefined, opts);
+	}
+
+	// Special for table: only show decimal if needed
+	function fmt1IfNeeded(n) {
+	  const num = typeof n === 'string' ? parseFloat(n.replace(/,/g, '')) : Number(n);
+	  if (!isFinite(num)) return n ?? '';
+	  const hasDecimal = num % 1 !== 0;
+	  return num.toLocaleString(undefined, hasDecimal
+		? { minimumFractionDigits: 1, maximumFractionDigits: 1 }
+		: {});
+	}
+
 	function createInventorySection(name, items) {
-	
-		let totalWeight = 0;
-		let totalValue = 0;
+	  let totalWeight = 0;
+	  let totalValue = 0;
 
-		items.forEach(item => {
-		  const qty = item.qty || 1;
-		  const weight = parseFloat(item.weight) || 0;
-		  const value = parseFloat(item.value) || 0;
-		  totalWeight += qty * weight;
-		  totalValue += qty * value;
-		});
-	
-		const section = document.createElement("section");
-		const isOpen = localStorage.getItem(`inventory_${name}`) !== 'closed';
-		section.className = `inventory-section ${isOpen ? 'open' : ''}`;
+	  items.forEach(item => {
+		const qty = item.qty || 1;
+		const weight = parseFloat(item.weight) || 0;
+		const value = parseFloat(item.value) || 0;
+		totalWeight += qty * weight;
+		totalValue += qty * value;
+	  });
+
+	  const section = document.createElement("section");
+	  const isOpen = localStorage.getItem(`inventory_${name}`) !== 'closed';
+	  section.className = `inventory-section ${isOpen ? 'open' : ''}`;
 	  section.id = `${name.trim().toLowerCase().replace(/\s+/g, '-')}-inventory`;
-	  
-		const header = document.createElement("div");
-		header.className = "inventory-header";
 
-		const toggleBtn = document.createElement("span");
-		toggleBtn.textContent = "⏷"; // down arrow
-		toggleBtn.style.marginRight = "10px";
-		toggleBtn.style.cursor = "pointer";
-		toggleBtn.style.fontSize = "18px";
-		toggleBtn.style.userSelect = "none";
+	  const header = document.createElement("div");
+	  header.className = "inventory-header";
 
-		const titleText = document.createElement("span");
-		titleText.textContent = name;
-		titleText.style.flexGrow = "1";
-		titleText.style.color = "white";
-		titleText.style.fontWeight = "bold";
-		titleText.style.fontSize = "20px";
+	  const toggleBtn = document.createElement("span");
+	  toggleBtn.textContent = "⏷";
+	  toggleBtn.style.marginRight = "10px";
+	  toggleBtn.style.cursor = "pointer";
+	  toggleBtn.style.fontSize = "18px";
+	  toggleBtn.style.userSelect = "none";
 
-		const titleWrapper = document.createElement("div");
-		titleWrapper.style.display = "flex";
-		titleWrapper.style.alignItems = "center";
-		titleWrapper.style.flexGrow = "1";
-		titleWrapper.appendChild(toggleBtn);
-		titleWrapper.appendChild(titleText);
-		titleWrapper.style.cursor = "pointer";
+	  const titleText = document.createElement("span");
+	  titleText.textContent = name;
+	  titleText.style.flexGrow = "1";
+	  titleText.style.color = "white";
+	  titleText.style.fontWeight = "bold";
+	  titleText.style.fontSize = "20px";
 
-		titleWrapper.onclick = () => {
-		  section.classList.toggle("open");
-		  const isOpen = section.classList.contains("open");
-		  toggleBtn.textContent = isOpen ? "⏷" : "⏵";
-		  localStorage.setItem(`inventory_${name}`, isOpen ? 'open' : 'closed');
-		};
+	  const titleWrapper = document.createElement("div");
+	  titleWrapper.style.display = "flex";
+	  titleWrapper.style.alignItems = "center";
+	  titleWrapper.style.flexGrow = "1";
+	  titleWrapper.appendChild(toggleBtn);
+	  titleWrapper.appendChild(titleText);
+	  titleWrapper.style.cursor = "pointer";
 
-		const addBtn = document.createElement("button");
-		addBtn.textContent = "➕ Add Item";
-		addBtn.onclick = (e) => {
-		  e.stopPropagation(); 
-		  addItem(name);
-		};
+	  titleWrapper.onclick = () => {
+		section.classList.toggle("open");
+		const isOpen = section.classList.contains("open");
+		toggleBtn.textContent = isOpen ? "⏷" : "⏵";
+		localStorage.setItem(`inventory_${name}`, isOpen ? 'open' : 'closed');
+	  };
 
-		header.appendChild(titleWrapper);
-		header.appendChild(addBtn);
-		section.appendChild(header);
+	  const addBtn = document.createElement("button");
+	  addBtn.textContent = "➕ Add Item";
+	  addBtn.onclick = (e) => {
+		e.stopPropagation();
+		addItem(name);
+	  };
+
+	  header.appendChild(titleWrapper);
+	  header.appendChild(addBtn);
+	  section.appendChild(header);
 
 	  const table = document.createElement("table");
 	  table.className = "inventory-table";
 
-		const headers = ["Item", "Qty", "Weight (lb)", "Value (gp)", "Type", "Rarity", "Attunement", "Attuned", "Notes", "Actions"];
-		const headerRow = document.createElement("tr");
+	  const headers = ["Item", "Qty", "Weight (lb)", "Value (gp)", "Type", "Rarity", "Attunement", "Attuned", "Notes", "Actions"];
+	  const headerRow = document.createElement("tr");
 
-		headers.forEach((text, index) => {
-		  const th = document.createElement("th");
-		  th.textContent = text;
-		  th.style.cursor = 'pointer';
-		  th.title = 'Double-click to sort';
-		  th.addEventListener('dblclick', () => {
-			sortInventoryTable(table, index);
-		  });
-		  headerRow.appendChild(th);
+	  headers.forEach((text, index) => {
+		const th = document.createElement("th");
+		th.textContent = text;
+		th.style.cursor = 'pointer';
+		th.title = 'Double-click to sort';
+		th.addEventListener('dblclick', () => {
+		  sortInventoryTable(table, index);
 		});
+		headerRow.appendChild(th);
+	  });
 
 	  table.appendChild(headerRow);
 
@@ -1900,16 +1915,23 @@
 		  item.item,
 		  item.qty,
 		  item.weight,
-		  item.value,
+		  item.value, // <-- We'll format this later
 		  item.type,
 		  item.rarity,
 		  item.attunement,
 		  item.attuned ? "✔" : "",
 		  item.notes
 		];
-		values.forEach(val => {
+
+		values.forEach((val, idx) => {
 		  const td = document.createElement("td");
-		  td.textContent = val || "";
+		  if (idx === 2) { // Weight
+			td.textContent = fmt1IfNeeded(val);
+		  } else if (idx === 3) { // Value
+			td.textContent = fmt1IfNeeded(val);
+		  } else {
+			td.textContent = val ?? "";
+		  }
 		  td.style.padding = "8px";
 		  td.style.borderBottom = "1px solid #444";
 		  row.appendChild(td);
@@ -1946,66 +1968,72 @@
 	  table.addEventListener('drop', e => handleInventoryDrop(e, name));
 
 	  const contentWrapper = document.createElement("div");
-		contentWrapper.className = "inventory-content";
-		contentWrapper.appendChild(table);
-		section.appendChild(contentWrapper);
+	  contentWrapper.className = "inventory-content";
+	  contentWrapper.appendChild(table);
+	  section.appendChild(contentWrapper);
 
-		const goldBox = document.createElement('div');
-		goldBox.className = 'gold-box';
+	  const goldBox = document.createElement('div');
+	  goldBox.className = 'gold-box';
 
-		const goldLabel = document.createElement('span');
-		goldLabel.textContent = 'Gold (gp):';
-		goldLabel.className = 'gold-label';
+	  const goldLabel = document.createElement('span');
+	  goldLabel.textContent = 'Gold (gp):';
+	  goldLabel.className = 'gold-label';
 
-		const goldValue = document.createElement('span');
-		goldValue.dataset.goldFor = name;
-		goldValue.className = 'gold-value';
+	  const goldValue = document.createElement('span');
+	  goldValue.dataset.goldFor = name;
+	  goldValue.className = 'gold-value';
+	  goldValue.setAttribute('contenteditable', false);
+
+	  const saveBtn = document.createElement('button');
+	  saveBtn.textContent = '✅';
+	  saveBtn.className = 'icon-button gold-save';
+	  saveBtn.title = 'Save gold';
+	  saveBtn.style.display = 'none';
+	  
+	  const weightBox = document.createElement('div');
+	  weightBox.className = 'gold-box';
+
+	  const valueBox = document.createElement('div');
+	  valueBox.className = 'gold-box';
+
+	  goldValue.ondblclick = () => {
+		goldValue.setAttribute('contenteditable', true);
+		goldValue.focus();
+		saveBtn.style.display = 'inline-block';
+	  };
+
+	  saveBtn.onclick = async () => {
 		goldValue.setAttribute('contenteditable', false);
-
-		const saveBtn = document.createElement('button');
-		saveBtn.textContent = '✅';
-		saveBtn.className = 'icon-button gold-save';
-		saveBtn.title = 'Save gold';
 		saveBtn.style.display = 'none';
 
-		goldValue.ondblclick = () => {
-		  goldValue.setAttribute('contenteditable', true);
-		  goldValue.focus();
-		  saveBtn.style.display = 'inline-block';
-		};
+		const raw = goldValue.textContent.replace(/,/g, '').trim();
+		if (!/^\d+$/.test(raw)) {
+		  alert('Please enter a valid number for gold.');
+		  return;
+		}
 
-		saveBtn.onclick = async () => {
-		  goldValue.setAttribute('contenteditable', false);
-		  saveBtn.style.display = 'none';
+		const newGp = parseInt(raw);
 
-		  const raw = goldValue.textContent.trim();
-		  if (!/^\d+$/.test(raw)) {
-			alert('Please enter a valid number for gold.');
-			return;
-		  }
+		const { data: player, error } = await supabase
+		  .from('players')
+		  .select('id')
+		  .eq('name', name)
+		  .single();
 
-		  const newGp = parseInt(raw);
+		if (error || !player) {
+		  alert('Player not found.');
+		  return;
+		}
 
-		  const { data: player, error } = await supabase
-			.from('players')
-			.select('id')
-			.eq('name', name)
-			.single();
+		const { error: updateError } = await supabase
+		  .from('players')
+		  .update({ gp: newGp })
+		  .eq('id', player.id);
 
-		  if (error || !player) {
-			alert('Player not found.');
-			return;
-		  }
-
-		  const { error: updateError } = await supabase
-			.from('players')
-			.update({ gp: newGp })
-			.eq('id', player.id);
-
-		  if (updateError) {
-			alert('Failed to update gold.');
-		  }
-		};
+		if (!updateError) {
+		  goldValue.textContent = fmt(newGp);
+		}
+	  };
 
 		(async () => {
 		  const { data: player } = await supabase
@@ -2013,32 +2041,31 @@
 			.select('gp')
 			.eq('name', name)
 			.single();
-		  goldValue.textContent = player?.gp ?? '0';
+		  goldValue.textContent = fmt(player?.gp ?? 0);
 		})();
-		
-		// Total Weight
-		const weightBox = document.createElement('div');
-		weightBox.className = 'gold-box';
+
 		weightBox.innerHTML = `
 		  <span class="gold-label">Weight:</span>
-		  <span class="gold-value" style="border-bottom: none;">${totalWeight.toFixed(2)} lb</span>`;
+		  <span class="gold-value" style="border-bottom: none;">
+			${fmt(totalWeight, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} lb
+		  </span>`;
 
-		// Total Value
-		const valueBox = document.createElement('div');
-		valueBox.className = 'gold-box';
 		valueBox.innerHTML = `
 		  <span class="gold-label">Value:</span>
-		  <span class="gold-value" style="border-bottom: none;">${totalValue.toFixed(2)} gp</span>`;
+		  <span class="gold-value" style="border-bottom: none;">
+			${fmt(totalValue, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} gp
+		  </span>`;
 
-		goldBox.appendChild(goldLabel);
-		goldBox.appendChild(goldValue);
-		goldBox.appendChild(saveBtn);
-		header.appendChild(goldBox);
-		header.appendChild(weightBox);
-		header.appendChild(valueBox);
-	
+	  goldBox.appendChild(goldLabel);
+	  goldBox.appendChild(goldValue);
+	  goldBox.appendChild(saveBtn);
+	  header.appendChild(goldBox);
+	  header.appendChild(weightBox);
+	  header.appendChild(valueBox);
+
 	  return section;
 	}
+
 
 	let currentInventoryPlayer = null;
 
