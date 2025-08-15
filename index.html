@@ -992,7 +992,6 @@
 	.npc-race,
 	.npc-status {
 	  font-size: 16px;  
-/*	  font-weight: bold;*/
 	  color: White;
 	}
 
@@ -1002,6 +1001,36 @@
 	  flex-shrink: 0;              
 	}
 	
+	/* NPC Image Modal */
+	#npc-img-modal {
+	  display: none;
+	  position: fixed;
+	  inset: 0;
+	  background: rgba(0,0,0,0.85);
+	  align-items: center;
+	  justify-content: center;
+	  z-index: 1200;
+	}
+
+	#npc-img-modal img {
+	  max-width: 95%;
+	  max-height: 95%;
+	  border-radius: 8px;
+	  box-shadow: 0 0 20px rgba(0,0,0,0.6);
+	  background: #222;
+	}
+
+	#npc-img-modal button {
+	  position: absolute;
+	  top: 12px;
+	  right: 18px;
+	  font-size: 28px;
+	  color: white;
+	  background: none;
+	  border: none;
+	  cursor: pointer;
+	}
+
 
 	
 </style>
@@ -1185,6 +1214,12 @@
 
 			<button onclick="submitNPCEdit()" class="gold-button">Update NPC</button>
 		  </div>
+		</div>
+		
+		<!-- NPC Image Modal -->
+		<div id="npc-img-modal" onclick="if(event.target.id==='npc-img-modal') closeNPCImgModal()">
+		  <button onclick="closeNPCImgModal()">&times;</button>
+		  <img id="npc-img-view" src="" alt="NPC">
 		</div>
 		
 		<!-- INVENTORY -->
@@ -1940,6 +1975,24 @@
 	  });
 	}
 
+	function openNPCImgModal(imgUrl) {
+	  document.getElementById('npc-img-view').src = imgUrl;
+	  document.getElementById('npc-img-modal').style.display = 'flex';
+
+	  // ESC close
+	  const escClose = (ev) => {
+		if (ev.key === 'Escape') {
+		  closeNPCImgModal();
+		  window.removeEventListener('keydown', escClose);
+		}
+	  };
+	  window.addEventListener('keydown', escClose);
+	}
+
+	function closeNPCImgModal() {
+	  document.getElementById('npc-img-modal').style.display = 'none';
+	  document.getElementById('npc-img-view').src = '';
+	}
 
 	function renderNPCs() {
 	  const statusFilter = document.getElementById('npc-status-filter').value.toLowerCase();
@@ -2020,6 +2073,11 @@
 			deleteBtn.innerHTML = '🗑️';
 			deleteBtn.title = 'Delete NPC';
 			deleteBtn.onclick = () => deleteNPC(npc.id);
+			
+			img.onclick = (e) => {
+			  e.stopPropagation();
+			  if (npc.image_url) openNPCImgModal(npc.image_url);
+			};
 
 			actions.appendChild(editBtn);
 			actions.appendChild(deleteBtn);
