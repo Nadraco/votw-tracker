@@ -1512,39 +1512,44 @@
 
 	  if (!draggedQuestId) return;
 
-	  const fromList = [...questData[draggedFromStatus]].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
-	  let toList = [...questData[newStatus]].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+	  const fromListSorted = [...questData[draggedFromStatus]].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+	  let toListSorted = [...questData[newStatus]].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
-	  const draggedIdxInFrom = fromList.findIndex(q => q.id === draggedQuestId);
+	  const draggedIdxInFrom = fromListSorted.findIndex(q => q.id === draggedQuestId);
 	  if (draggedIdxInFrom === -1) return;
-	  const [dragged] = fromList.splice(draggedIdxInFrom, 1);
+
+	  const [dragged] = fromListSorted.splice(draggedIdxInFrom, 1);
 	  dragged.status = newStatus;
 
-	  let insertAt = toList.length;
+	  if (draggedFromStatus === newStatus) {
+		toListSorted = fromListSorted;
+	  }
+
+	  let insertAt = toListSorted.length;
 	  if (targetId) {
-		const tIdx = toList.findIndex(q => q.id === targetId);
+		const tIdx = toListSorted.findIndex(q => q.id === targetId);
 		if (tIdx !== -1) insertAt = tIdx;
 	  }
-	  toList.splice(insertAt, 0, dragged);
 
-	  toList.forEach((q, idx) => {
+	  toListSorted.splice(insertAt, 0, dragged);
+
+	  toListSorted.forEach((q, idx) => {
 		q.sortOrder = idx;
 		supabase.from(QUESTS_TABLE).update({ status: q.status, sort_order: idx }).eq('id', q.id);
 	  });
+
 	  if (draggedFromStatus !== newStatus) {
-		fromList.forEach((q, idx) => {
+		fromListSorted.forEach((q, idx) => {
 		  q.sortOrder = idx;
 		  supabase.from(QUESTS_TABLE).update({ sort_order: idx }).eq('id', q.id);
 		});
 	  }
 
-	  // Commit Changes
-	  questData[draggedFromStatus] = fromList;
-	  questData[newStatus] = toList;
+	  questData[draggedFromStatus] = fromListSorted;
+	  questData[newStatus] = toListSorted;
 
 	  renderQuests();
 	}
-
 
 	function handleDragEnd(e) {
 	  e.target.style.opacity = '';
