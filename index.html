@@ -5,8 +5,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>VOTW Tracker</title>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
 <style>
@@ -1368,21 +1366,46 @@
 	  'https://jdaelzxmjpcbyzcgfwzr.supabase.co',
 	  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkYWVsenhtanBjYnl6Y2dmd3pyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMzOTA2MDQsImV4cCI6MjA2ODk2NjYwNH0.7yDlBMJxoaJCjn4eD7ydRQAKgTu1UaneAAv2unGnuVc'
 	);
-
-	firebase.initializeApp({
-	  apiKey: "AIzaSyDxSKU85aMBBL6jNvHiaihnWA-vApp-dVk",
-	  authDomain: "votw-tracker.firebaseapp.com",
-	  projectId: "votw-tracker",
-	  storageBucket: "votw-tracker.appspot.com",
-	  messagingSenderId: "554314433668",
-	  appId: "1:554314433668:web:9818e708d793dcfad2eed1"
-	});
-
-	const db = firebase.firestore();
 	
 	let questData = { active: [], completed: [], failed: [] };
 	let currentTab = 'active';
 	let selectedQuestId = null;
+	
+	const QUESTS_TABLE = 'quests';
+
+	async function loadQuestsAndRender() {
+	  const { data, error } = await supabase
+		.from(QUESTS_TABLE)
+		.select('*')
+		.order('sort_order', { ascending: true })
+		.order('title', { ascending: true });
+
+	  if (error) { console.error('loadQuests error:', error); return; }
+
+	  questData = { active: [], completed: [], failed: [] };
+
+	  (data || []).forEach(q => {
+		const statusKey = (q.status || '').toLowerCase();
+		if (questData[statusKey]) {
+		  questData[statusKey].push({
+			id: q.id,
+			title: q.title,
+			lead: q.lead,
+			giver: q.giver,
+			type: q.type,
+			location: q.location,
+			timeRemaining: q.time_remaining, // map to UI name
+			notes: q.notes,
+			reward: q.reward,
+			priority: q.priority,
+			status: q.status,
+			sortOrder: q.sort_order,
+		  });
+		}
+	  });
+
+	  renderQuests();
+	}
 	
 	const inventoryPlayers = [
 	  "Ship",
@@ -1506,12 +1529,12 @@
 
 	  toList.forEach((q, idx) => {
 		q.sortOrder = idx;
-		db.collection("quests").doc(q.id).update({ status: q.status, sortOrder: idx });
+		supabase.from(QUESTS_TABLE).update({ status: q.status, sort_order: idx }).eq('id', q.id);
 	  });
 	  if (draggedFromStatus !== newStatus) {
 		fromList.forEach((q, idx) => {
 		  q.sortOrder = idx;
-		  db.collection("quests").doc(q.id).update({ sortOrder: idx });
+		  supabase.from(QUESTS_TABLE).update({ sort_order: idx }).eq('id', q.id);
 		});
 	  }
 
@@ -1583,7 +1606,7 @@
 	  document.getElementById('modal-giver-input').value = quest?.giver || '';
 	  document.getElementById('modal-type-input').value = quest?.type || '';
 	  document.getElementById('modal-location-input').value = quest?.location || '';
-	  document.getElementById('modal-time-input').value = quest?.time || '';
+	  document.getElementById('modal-time-input').value = quest?.timeRemaining || '';
 	  document.getElementById('modal-notes-input').value = quest?.notes || '';
 	  document.getElementById('modal-reward-input').value = quest?.reward || '';
 	  document.getElementById('modal-priority-select').value = quest?.priority || 'low';
@@ -1591,35 +1614,34 @@
 
 	  modal.style.display = 'flex';
 
-	  document.getElementById('modal-submit-btn').onclick = function () {
-		const newQuest = {
-		  title: document.getElementById('modal-title-input').value.trim(),
-		  lead: document.getElementById('modal-lead-input').value.trim(),
-		  giver: document.getElementById('modal-giver-input').value.trim(),
-		  type: document.getElementById('modal-type-input').value.trim(),
-		  location: document.getElementById('modal-location-input').value.trim(),
-		  time: document.getElementById('modal-time-input').value.trim(),
-		  notes: document.getElementById('modal-notes-input').value.trim(),
-		  reward: document.getElementById('modal-reward-input').value.trim(),
-		  priority: document.getElementById('modal-priority-select').value,
-		  status: document.getElementById('modal-status-select').value,
-		  sortOrder: questData[document.getElementById('modal-status-select').value]?.length || 0,
-		};
+		document.getElementById('modal-submit-btn').onclick = async function () {
+		  const newQuest = {
+			title: document.getElementById('modal-title-input').value.trim(),
+			lead: document.getElementById('modal-lead-input').value.trim() || null,
+			giver: document.getElementById('modal-giver-input').value.trim() || null,
+			type: document.getElementById('modal-type-input').value.trim() || null,
+			location: document.getElementById('modal-location-input').value.trim() || null,
+			time_remaining: document.getElementById('modal-time-input').value.trim() || null,
+			notes: document.getElementById('modal-notes-input').value.trim() || null,
+			reward: document.getElementById('modal-reward-input').value.trim() || null,
+			priority: document.getElementById('modal-priority-select').value,
+			status: document.getElementById('modal-status-select').value,
+			sort_order: questData[document.getElementById('modal-status-select').value]?.length || 0,
+		  };
 
-		if (!newQuest.title) return alert("Title is required.");
+		  if (!newQuest.title) { alert("Title is required."); return; }
 
-		if (mode === 'edit' && quest?.id) {
-		  db.collection("quests").doc(quest.id).set(newQuest).then(() => {
+		  if (mode === 'edit' && quest?.id) {
+			const { error } = await supabase.from(QUESTS_TABLE).update(newQuest).eq('id', quest.id);
+			if (error) { alert("Update failed."); return; }
 			alert("Quest updated!");
-			closeModal();
-		  });
-		} else {
-		  db.collection("quests").add(newQuest).then(() => {
+		  } else {
+			const { error } = await supabase.from(QUESTS_TABLE).insert([newQuest]);
+			if (error) { alert("Insert failed."); return; }
 			alert("Quest added!");
-			closeModal();
-		  });
-		}
-	  };
+		  }
+		  closeModal();
+		};
 	}
 
 	function closeModal() {
@@ -1633,46 +1655,31 @@
 	  openModal('edit', found.quest);
 	}
 
-	function deleteQuest() {
+	async function deleteQuest() {
 	  if (!selectedQuestId) return alert("Select a quest first.");
 	  const found = findQuestById(selectedQuestId);
 	  if (!found) return alert("Quest not found.");
 
 	  if (confirm(`Delete quest "${found.quest.title}"?`)) {
-		db.collection("quests").doc(found.quest.id).delete().then(() => {
-		  alert("Deleted.");
-		  selectedQuestId = null;
-		  renderQuests();
-		});
+		const { error } = await supabase.from(QUESTS_TABLE).delete().eq('id', found.quest.id);
+		if (error) { alert("Failed to delete."); return; }
+		alert("Deleted.");
+		selectedQuestId = null;
+		renderQuests();
 	  }
 	}
-
-
-	db.collection("quests").onSnapshot(snapshot => {
-
-	  questData = { active: [], completed: [], failed: [] };
-
-	  snapshot.forEach(doc => {
-		const quest = doc.data();
-		quest.id = doc.id;
-
-		const statusKey = (quest.status || '').toLowerCase().trim();
-		if (statusKey && questData[statusKey]) {
-		  questData[statusKey].push(quest);
-		}
-	  });
-
-	  ["active", "completed", "failed"].forEach(st => {
-		questData[st].sort((a, b) => {
-		  const so = (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
-		  return so !== 0 ? so : String(a.title || '').localeCompare(String(b.title || ''));
-		});
-	  });
-
-	  renderQuests();
-	});
-
 	
+	// Initial Load
+	loadQuestsAndRender();
+
+	// Realtime Updates
+	supabase
+	  .channel('quests-realtime')
+	  .on('postgres_changes', { event: '*', schema: 'public', table: QUESTS_TABLE }, async () => {
+		await loadQuestsAndRender();
+	  })
+	  .subscribe();
+
 	// Drag Between Status Tabs
 	document.querySelectorAll('.tab').forEach(tab => {
 	  tab.addEventListener('dragover', e => {
@@ -1702,10 +1709,10 @@
 		  item.sortOrder = toList.length;
 		  toList.push(item);
 
-		  db.collection("quests").doc(item.id).update({ status: newStatus, sortOrder: item.sortOrder });
-
-		  // reindex the fromList too
-		  fromList.forEach((q, i) => db.collection("quests").doc(q.id).update({ sortOrder: i }));
+		  supabase.from(QUESTS_TABLE).update({ status: newStatus, sort_order: item.sortOrder }).eq('id', item.id);
+		  fromList.forEach((q, i) => {
+		  supabase.from(QUESTS_TABLE).update({ sort_order: i }).eq('id', q.id);
+		  });
 
 		  questData[draggedFromStatus] = fromList;
 		  questData[newStatus] = toList;
