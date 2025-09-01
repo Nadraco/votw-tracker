@@ -1370,6 +1370,12 @@
 	let questData = { active: [], completed: [], failed: [] };
 	let currentTab = 'active';
 	let selectedQuestId = null;
+	let questsRTPaused = false;
+	
+	function pauseQuestsRT(ms = 800) {
+	  questsRTPaused = true;
+	  setTimeout(() => (questsRTPaused = false), ms);
+	}
 	
 	const QUESTS_TABLE = 'quests';
 
@@ -1490,6 +1496,33 @@
 
 	let draggedQuestId = null;
 	let draggedFromStatus = null;
+	
+		async function persistQuestOrder(updates) {
+	  // de-dupe by id (last write wins)
+	  const byId = new Map();
+	  for (const u of updates) byId.set(String(u.id), u);
+	  const deduped = [...byId.values()];
+
+	  // Fast path: try UPSERT
+	  pauseQuestsRT();
+	  let { error } = await supabase
+		.from(QUESTS_TABLE)
+		.upsert(deduped, { onConflict: 'id', ignoreDuplicates: false });
+
+	  if (!error) return null;
+
+	  // Fallback: row-by-row updates (works w/o unique index)
+	  console.warn('Upsert failed, falling back to per-row updates:', error);
+	  for (const u of deduped) {
+		const payload = {};
+		if (u.sort_order !== undefined) payload.sort_order = u.sort_order;
+		if (u.status     !== undefined) payload.status     = u.status;
+		const { error: e2 } = await supabase.from(QUESTS_TABLE).update(payload).eq('id', u.id);
+		if (e2) return e2;
+	  }
+	  return null;
+	}
+
 
 	function handleDragStart(e) {
 	  const li = e.target.closest('li');
@@ -1504,52 +1537,55 @@
 	  e.dataTransfer.dropEffect = 'move';
 	}
 
-	function handleDrop(e) {
+	async function handleDrop(e) {
 	  e.preventDefault();
-	  const targetLi = e.target.closest('li');
-	  const targetId = targetLi?.dataset.id || null;
-	  const newStatus = currentTab;
 
+	  const toId = (x) => String(x);
+	  const targetLi = e.target.closest('li');
+	  const targetId = targetLi ? targetLi.dataset.id : null;
+	  const newStatus = currentTab;
 	  if (!draggedQuestId) return;
 
-	  const fromListSorted = [...questData[draggedFromStatus]].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
-	  let toListSorted = [...questData[newStatus]].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+	  // Always work on fully-sorted copies
+	  const fromSorted = [...questData[draggedFromStatus]].sort((a,b)=>(a.sortOrder ?? 0)-(b.sortOrder ?? 0));
+	  const toSorted   = (draggedFromStatus === newStatus)
+		? fromSorted
+		: [...questData[newStatus]].sort((a,b)=>(a.sortOrder ?? 0)-(b.sortOrder ?? 0));
 
-	  const draggedIdxInFrom = fromListSorted.findIndex(q => q.id === draggedQuestId);
+	  const draggedIdxInFrom = fromSorted.findIndex(q => toId(q.id) === toId(draggedQuestId));
 	  if (draggedIdxInFrom === -1) return;
 
-	  const [dragged] = fromListSorted.splice(draggedIdxInFrom, 1);
+	  const [dragged] = fromSorted.splice(draggedIdxInFrom, 1);
 	  dragged.status = newStatus;
 
-	  if (draggedFromStatus === newStatus) {
-		toListSorted = fromListSorted;
-	  }
-
-	  let insertAt = toListSorted.length;
+	  // Insert at drop target (or end)
+	  const dest = (draggedFromStatus === newStatus) ? fromSorted : toSorted;
+	  let insertAt = dest.length;
 	  if (targetId) {
-		const tIdx = toListSorted.findIndex(q => q.id === targetId);
+		const tIdx = dest.findIndex(q => toId(q.id) === toId(targetId));
 		if (tIdx !== -1) insertAt = tIdx;
 	  }
+	  dest.splice(insertAt, 0, dragged);
 
-	  toListSorted.splice(insertAt, 0, dragged);
-
-	  toListSorted.forEach((q, idx) => {
-		q.sortOrder = idx;
-		supabase.from(QUESTS_TABLE).update({ status: q.status, sort_order: idx }).eq('id', q.id);
-	  });
-
+	  // Build a single bulk payload
+	  const updates = [];
+	  dest.forEach((q, i) => updates.push({ id: q.id, status: q.status, sort_order: i }));
 	  if (draggedFromStatus !== newStatus) {
-		fromListSorted.forEach((q, idx) => {
-		  q.sortOrder = idx;
-		  supabase.from(QUESTS_TABLE).update({ sort_order: idx }).eq('id', q.id);
-		});
+		fromSorted.forEach((q, i) => updates.push({ id: q.id, sort_order: i })); // status unchanged
 	  }
 
-	  questData[draggedFromStatus] = fromListSorted;
-	  questData[newStatus] = toListSorted;
+		const err = await persistQuestOrder(updates);
+		if (err) {
+		  console.error('Reorder failed:', err);
+		  alert('Failed to save the new order.');
+		  return;
+		}
 
-	  renderQuests();
+	  await loadQuestsAndRender();
+	  selectedQuestId = String(dragged.id);
+	  highlightSelectedListItem();
 	}
+
 
 	function handleDragEnd(e) {
 	  e.target.style.opacity = '';
@@ -1587,8 +1623,9 @@
 
 	function findQuestById(id) {
 	  if (!id) return null;
+	  const sid = String(id);
 	  for (const st of ['active','completed','failed']) {
-		const idx = questData[st].findIndex(q => q.id === id);
+		const idx = questData[st].findIndex(q => String(q.id) === sid);
 		if (idx !== -1) return { quest: questData[st][idx], status: st, index: idx };
 	  }
 	  return null;
@@ -1597,7 +1634,7 @@
 	function highlightSelectedListItem() {
 	  const list = document.getElementById('quest-list');
 	  list.querySelectorAll('li').forEach(li => {
-		li.classList.toggle('active', li.dataset.id === selectedQuestId);
+		li.classList.toggle('active', String(li.dataset.id) === String(selectedQuestId));
 	  });
 	}
 
@@ -1679,11 +1716,12 @@
 
 	// Realtime Updates
 	supabase
-	  .channel('quests-realtime')
-	  .on('postgres_changes', { event: '*', schema: 'public', table: QUESTS_TABLE }, async () => {
+		.channel('quests-realtime')
+		.on('postgres_changes', { event: '*', schema: 'public', table: QUESTS_TABLE }, async () => {
+		if (questsRTPaused) return;     // <-- ignore our own writes briefly
 		await loadQuestsAndRender();
-	  })
-	  .subscribe();
+	})
+	.subscribe();
 
 	// Drag Between Status Tabs
 	document.querySelectorAll('.tab').forEach(tab => {
@@ -1696,36 +1734,49 @@
 		tab.classList.remove('drag-over');
 	  });
 
-		tab.addEventListener('drop', e => {
-		  e.preventDefault();
-		  tab.classList.remove('drag-over');
-		  const newStatus = tab.textContent.trim().toLowerCase();
-		  if (!draggedQuestId) return;
+	  tab.addEventListener('drop', async e => {
+		e.preventDefault();
+		tab.classList.remove('drag-over');
 
-		  if (draggedFromStatus === newStatus) { renderQuests(); switchTab(newStatus); return; }
+		const newStatus = tab.textContent.trim().toLowerCase();
+		if (!draggedQuestId) return;
 
-		  const fromList = [...questData[draggedFromStatus]].sort((a,b)=>(a.sortOrder??0)-(b.sortOrder??0));
-		  let toList     = [...questData[newStatus]].sort((a,b)=>(a.sortOrder??0)-(b.sortOrder??0));
-
-		  const idx = fromList.findIndex(q => q.id === draggedQuestId);
-		  if (idx === -1) return;
-		  const [item] = fromList.splice(idx,1);
-		  item.status = newStatus;
-		  item.sortOrder = toList.length;
-		  toList.push(item);
-
-		  supabase.from(QUESTS_TABLE).update({ status: newStatus, sort_order: item.sortOrder }).eq('id', item.id);
-		  fromList.forEach((q, i) => {
-		  supabase.from(QUESTS_TABLE).update({ sort_order: i }).eq('id', q.id);
-		  });
-
-		  questData[draggedFromStatus] = fromList;
-		  questData[newStatus] = toList;
-
+		// Same status? Just render & switch.
+		if (draggedFromStatus === newStatus) {
 		  renderQuests();
 		  switchTab(newStatus);
-		});	  
+		  return;
+		}
+
+		const fromSorted = [...questData[draggedFromStatus]].sort((a,b)=>(a.sortOrder ?? 0)-(b.sortOrder ?? 0));
+		const toSorted   = [...questData[newStatus]].sort((a,b)=>(a.sortOrder ?? 0)-(b.sortOrder ?? 0));
+
+		const idx = fromSorted.findIndex(q => String(q.id) === String(draggedQuestId));
+		if (idx === -1) return;
+
+		const [item] = fromSorted.splice(idx, 1);
+		item.status = newStatus;
+		toSorted.push(item); // drop to end of new status
+
+		// Build bulk updates for both lists
+		const updates = [];
+		toSorted.forEach((q, i)   => updates.push({ id: q.id, status: newStatus, sort_order: i }));
+		fromSorted.forEach((q, i) => updates.push({ id: q.id,                    sort_order: i }));
+
+		const err = await persistQuestOrder(updates);
+		if (err) {
+		  console.error('Move failed:', err);
+		  alert('Failed to save the new order.');
+		  return;
+		}
+
+		await loadQuestsAndRender();
+		switchTab(newStatus);
+		selectedQuestId = String(item.id);
+		highlightSelectedListItem();
+	  });
 	});
+
 
 	let npcs = [];
 	let activeCountry = '';
