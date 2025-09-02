@@ -1029,8 +1029,190 @@
 	  cursor: pointer;
 	}
 
+	/* New Quest UI */
+	#quest-details { padding: 24px 30px; }
 
-	
+	.q-card {
+	  position: relative;
+	  background: #1f0f1a;
+	  border: 1px solid #4d2d3e;
+	  border-radius: 12px;
+	  padding: 20px;
+	  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+	}
+
+	.q-header {
+	  display: flex;
+	  gap: 16px;
+	  align-items: flex-start;
+	  justify-content: space-between;
+	}
+
+	.q-title-wrap { flex: 1; min-width: 0; }
+	.q-title {
+	  margin: 0 0 6px;
+	  font-size: 28px;
+	  line-height: 1.2;
+	  color: gold;
+	  word-wrap: break-word;
+	}
+	.q-lead {
+	  font-size: 20px;        /* bigger lead */
+	  line-height: 1.5;
+	  margin: 4px 0 18px;     /* extra space before the badges */
+	  color: #d9d1d4;
+	}
+
+	.q-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+		
+	.pill {
+	  display: inline-flex;
+	  align-items: center;
+	  gap: 6px;
+	  padding: 6px 10px;
+	  border-radius: 999px;
+	  font-size: 12px;
+	  letter-spacing: .2px;
+	  border: 1px solid #5c3b4e;
+	  background: #2b162a;
+	  color: #eee;
+	  white-space: nowrap;
+	}
+	.pill.tonal { background: #3e2337; }
+	.pill.soft { background: #2a1a27; border-color: #4d2d3e; }
+	.pill.priority-high { background: #4b1f29; border-color: #a63a4f; color: #ffd4da; }
+	.pill.priority-medium { background: #48301f; border-color: #b06d2f; color: #ffe6c9; }
+	.pill.priority-low { background: #3e3a1b; border-color: #9b9232; color: #fff7b0; }
+	.pill.status-active { background: #1e3a2f; border-color: #2e7a5b; color: #c8ffe6; }
+	.pill.status-completed { background: #263a1e; border-color: #5a8a2e; color: #e4ffd0; }
+	.pill.status-failed { background: #3a1e1e; border-color: #8a2e2e; color: #ffd0d0; }
+
+	.q-actions { display: flex; gap: 8px; flex-shrink: 0; }
+	.q-actions .icon-button { padding: 8px 10px; border-radius: 8px; }
+
+	.q-divider {
+	  border: none;
+	  height: 1px;
+	  background: linear-gradient(90deg, transparent, #4d2d3e, transparent);
+	  margin: 14px 0;
+	}
+
+	.q-meta-grid {
+	  display: grid;
+	  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	  gap: 12px 16px;
+	}
+	.meta {
+	  background: #241320;
+	  border: 1px solid #4d2d3e;
+	  border-radius: 8px;
+	  padding: 10px 12px;
+	}
+	.meta .label {
+	  display: block;
+	  font-size: 11px;
+	  color: #c8b5be;
+	  letter-spacing: .4px;
+	  text-transform: uppercase;
+	  margin-bottom: 4px;
+	}
+	.meta .value {
+	  font-size: 14px;
+	  color: #fff;
+	  word-break: break-word;
+	}
+
+	.q-section { margin-top: 12px; }
+	.q-section-title {
+	  color: #e7c2e0;
+	  font-weight: 600;
+	  font-size: 13px;
+	  text-transform: uppercase;
+	  letter-spacing: .4px;
+	  margin-bottom: 8px;
+	}
+	.q-notes {
+	  background: #1c0f19;
+	  border: 1px dashed #5c3b4e;
+	  border-radius: 8px;
+	  padding: 12px;
+	  color: #ddd;
+	  white-space: pre-wrap;
+	  word-break: break-word;
+	}
+
+	/* Empty State */
+	.q-empty { display: grid; place-items: center; min-height: 260px; }
+	.q-empty-inner { text-align: center; color: #e6d6e6; opacity: .8; }
+	.q-empty-icon { font-size: 28px; margin-bottom: 6px; }
+	.q-empty-title { font-size: 18px; color: gold; margin-bottom: 4px; }
+
+	/* Meta Tiles */
+	.q-meta-grid {
+	  display: grid;
+	  grid-template-columns: repeat(2, minmax(240px, 1fr)); /* tighter + 2 columns */
+	  gap: 12px 14px;
+	  max-width: 760px;
+	  margin: 0 auto;
+	}
+
+	/* Base Tile */
+	.meta.kv {
+	  display: flex;
+	  align-items: center;
+	  gap: 12px;
+	  padding: 12px 14px;
+	  border-radius: 12px;
+	  background: linear-gradient(180deg, #241320, #1c0f19);
+	  border: 1px solid #4d2d3e;
+	  box-shadow:
+		inset 0 1px 0 rgba(255,255,255,0.04),
+		0 6px 18px rgba(0,0,0,0.35);
+	}
+
+	.kv-icon {
+	  width: 36px;
+	  height: 36px;
+	  border-radius: 10px;
+	  display: grid;
+	  place-items: center;
+	  font-size: 18px;
+	  flex: 0 0 36px;
+	  background: rgba(255,255,255,0.06);
+	  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+	}
+
+	.kv-content .label {
+	  display: block;
+	  font-size: 11px;
+	  letter-spacing: .35px;
+	  text-transform: uppercase;
+	  color: #c8b5be;
+	  margin-bottom: 2px;
+	}
+	.kv-content .value {
+	  font-size: 15px;
+	  color: #fff;
+	  font-weight: 600;
+	  word-break: break-word;
+	}
+
+	.meta.kv--giver .kv-icon     { background: rgba(184,132,255,0.18); }
+	.meta.kv--reward .kv-icon    { background: rgba(255,215,0,0.18); }
+	.meta.kv--location .kv-icon  { background: rgba(114,198,255,0.18); }
+	.meta.kv--time .kv-icon      { background: rgba(255,143,135,0.18); }
+
+	.meta.kv--giver    { box-shadow: inset 0 0 0 1px rgba(184,132,255,0.18), 0 6px 18px rgba(0,0,0,0.35); }
+	.meta.kv--reward   { box-shadow: inset 0 0 0 1px rgba(255,215,0,0.18),   0 6px 18px rgba(0,0,0,0.35); }
+	.meta.kv--location { box-shadow: inset 0 0 0 1px rgba(114,198,255,0.18), 0 6px 18px rgba(0,0,0,0.35); }
+	.meta.kv--time     { box-shadow: inset 0 0 0 1px rgba(255,143,135,0.18), 0 6px 18px rgba(0,0,0,0.35); }
+
+	/* Mobile */
+	@media (max-width: 900px) {
+	  .q-meta-grid { grid-template-columns: 1fr; max-width: 520px; }
+	}
+
+
 </style>
 
 </head>
@@ -1048,8 +1230,6 @@
 	<div id="business-tab" class="content">
 		  <h3 style="color: gold; padding-left: 30px;">Coming Soon!</h3>
 	</div>
-
-
   
    <!-- QUEST TRACKER -->
 	<div id="quest-tracker" class="content">
@@ -1075,15 +1255,15 @@
       <ul class="quest-list" id="quest-list"></ul>
       <button onclick="openModal()" style="margin-top: 20px; width: 100%; padding: 10px; background: #4e2d3a; color: white; border: none; border-radius: 4px; cursor: pointer;">➕ Add Quest</button>
     </div>
-    <div class="main" id="quest-details">
-      <div class="quest-title">Select a quest</div>
-      <div class="quest-lead">Quest details will appear here.</div>
-      <div class="quest-meta"></div>
-		<div style="margin-top: 20px;">
-		  <button onclick="editQuest()" class="icon-button" title="Edit Quest">✏️</button>
-		  <button onclick="deleteQuest()" class="icon-button" title="Delete Quest">🗑️</button>
+		<div class="main" id="quest-details">
+		  <div class="q-card q-empty">
+			<div class="q-empty-inner">
+			  <div class="q-empty-icon">🧭</div>
+			  <div class="q-empty-title">Select a quest</div>
+			  <div>Details will appear here.</div>
+			</div>
+		  </div>
 		</div>
-    </div>
   </div>
 
   <!-- QUEST MODAL -->
@@ -1378,6 +1558,108 @@
 	}
 	
 	const QUESTS_TABLE = 'quests';
+	
+	// New Quest UI Helpers
+	function esc(s) {
+	  return String(s ?? '').replace(/[&<>"']/g, m => ({
+		'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+	  }[m]));
+	}
+	const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '-';
+
+	const isBlank = v => v == null || String(v).trim() === '' || String(v).trim() === '-';
+
+	function pill(label, cls='') { return `<span class="pill ${cls}">${esc(label)}</span>`; }
+	
+	function priorityPill(p) {
+	  const key = (p||'').toLowerCase();
+	  if (!key) return '';
+	  return pill(`Priority: ${cap(key)}`, `priority-${key}`);
+	}
+	
+	function statusPill(s) {
+	  const key = (s||'').toLowerCase();
+	  if (!key) return '';
+	  return pill(`Status: ${cap(key)}`, `status-${key}`);
+	}
+
+	function meta(label, value) {
+	  if (isBlank(value)) return '';
+	  return `<div class="meta"><span class="label">${esc(label)}</span><span class="value">${esc(value)}</span></div>`;
+	}
+
+	function metaPretty(kind, label, value) {
+	  if (isBlank(value)) return '';
+	  const icon = { giver: '🎭', reward: '💎', location: '📍', time: '⏳' }[kind] || 'ℹ️';
+	  return `
+		<div class="meta kv kv--${kind}">
+		  <div class="kv-icon">${icon}</div>
+		  <div class="kv-content">
+			<span class="label">${esc(label)}</span>
+			<span class="value">${esc(value)}</span>
+		  </div>
+		</div>`;
+	}
+
+	function sectionBlock(label, value) {
+	  if (isBlank(value)) return '';
+	  return `
+		<div class="q-section">
+		  <div class="q-section-title">${esc(label)}</div>
+		  <div class="q-notes">${esc(value).replace(/\n/g,'<br>')}</div>
+		</div>`;
+	}
+
+	function renderEmptyQuest(message='Select a quest') {
+	  document.getElementById('quest-details').innerHTML = `
+		<div class="q-card q-empty">
+		  <div class="q-empty-inner">
+			<div class="q-empty-icon">🧭</div>
+			<div class="q-empty-title">${esc(message)}</div>
+			<div>Adjust your filters or add a new quest.</div>
+		  </div>
+		</div>`;
+	}
+
+	function renderQuestCard(q) {
+
+	const badges = [
+	  (!isBlank(q.type) ? pill(q.type, 'tonal') : ''),
+	  priorityPill(q.priority),
+	  statusPill(q.status),
+	].filter(Boolean).join('');
+
+	const notesHtml = !isBlank(q.notes)
+	  ? `<div class="q-section">
+		   <div class="q-section-title">Notes</div>
+		   <div class="q-notes">${esc(q.notes).replace(/\n/g,'<br>')}</div>
+		 </div>`
+	  : '';
+
+	  document.getElementById('quest-details').innerHTML = `
+		<div class="q-card" data-priority="${esc(q.priority||'')}">
+		  <div class="q-header">
+			<div class="q-title-wrap">
+				<h1 class="q-title">${esc(isBlank(q.title) ? 'Untitled Quest' : q.title)}</h1>
+				${!isBlank(q.lead) ? `<p class="q-lead">${esc(q.lead)}</p>` : ''}
+			  <div class="q-badges">${badges}</div>
+			</div>
+			<div class="q-actions">
+			  <button onclick="editQuest()" class="icon-button edit" title="Edit Quest">✏️ Edit</button>
+			  <button onclick="deleteQuest()" class="icon-button delete" title="Delete Quest">🗑️ Delete</button>
+			</div>
+		  </div>
+
+			<hr class="q-divider" />
+
+			${sectionBlock('Giver', q.giver)}
+			${sectionBlock('Reward', q.reward)}
+			${sectionBlock('Location', q.location)}
+			${sectionBlock('Time Remaining', q.timeRemaining)}
+			${notesHtml}
+
+		</div>`;
+	}
 
 	async function loadQuestsAndRender() {
 	  const { data, error } = await supabase
@@ -1487,11 +1769,8 @@
 		  selectQuestById(stillVisible ? selectedQuestId : filtered[0].id, filtered);
 		} else {
 		  selectedQuestId = null;
-		  document.querySelector('.quest-title').innerText = 'No quests match the filters';
-		  document.querySelector('.quest-lead').innerText = '';
-		  document.querySelector('.quest-meta').innerHTML = '<div>-</div>'.repeat(6);
+		  renderEmptyQuest('No quests match the filters');
 		}
-
 	}
 
 	let draggedQuestId = null;
@@ -1503,7 +1782,6 @@
 	  for (const u of updates) byId.set(String(u.id), u);
 	  const deduped = [...byId.values()];
 
-	  // Fast path: try UPSERT
 	  pauseQuestsRT();
 	  let { error } = await supabase
 		.from(QUESTS_TABLE)
@@ -1511,7 +1789,6 @@
 
 	  if (!error) return null;
 
-	  // Fallback: row-by-row updates (works w/o unique index)
 	  console.warn('Upsert failed, falling back to per-row updates:', error);
 	  for (const u of deduped) {
 		const payload = {};
@@ -1546,7 +1823,6 @@
 	  const newStatus = currentTab;
 	  if (!draggedQuestId) return;
 
-	  // Always work on fully-sorted copies
 	  const fromSorted = [...questData[draggedFromStatus]].sort((a,b)=>(a.sortOrder ?? 0)-(b.sortOrder ?? 0));
 	  const toSorted   = (draggedFromStatus === newStatus)
 		? fromSorted
@@ -1558,7 +1834,7 @@
 	  const [dragged] = fromSorted.splice(draggedIdxInFrom, 1);
 	  dragged.status = newStatus;
 
-	  // Insert at drop target (or end)
+	  // Insert at drop target
 	  const dest = (draggedFromStatus === newStatus) ? fromSorted : toSorted;
 	  let insertAt = dest.length;
 	  if (targetId) {
@@ -1567,7 +1843,6 @@
 	  }
 	  dest.splice(insertAt, 0, dragged);
 
-	  // Build a single bulk payload
 	  const updates = [];
 	  dest.forEach((q, i) => updates.push({ id: q.id, status: q.status, sort_order: i }));
 	  if (draggedFromStatus !== newStatus) {
@@ -1598,26 +1873,7 @@
 	  if (!found) return;
 
 	  selectedQuestId = id;
-
-	  const q = found.quest;
-	  document.querySelector('.quest-title').innerText = q.title || '';
-	  document.querySelector('.quest-lead').innerText = q.lead || '';
-	  
-		const cap = str => str ? str.charAt(0).toUpperCase() + str.slice(1) : '-';
-
-		document.querySelector('.quest-meta').innerHTML = `
-		  <div><strong>Title:</strong> ${q.title || '-'}</div>
-		  <div><strong>Lead:</strong> ${q.lead || '-'}</div>
-		  <div><strong>Giver:</strong> ${q.giver || '-'}</div>
-		  <div><strong>Type:</strong> ${q.type || '-'}</div>
-		  <div><strong>Location:</strong> ${q.location || '-'}</div>
-		  <div><strong>Time Remaining:</strong> ${q.timeRemaining || '-'}</div>
-		  <div><strong>Notes:</strong> ${q.notes || '-'}</div>
-		  <div><strong>Reward:</strong> ${q.reward || '-'}</div>
-		  <div><strong>Priority:</strong> ${cap(q.priority)}</div>
-		  <div><strong>Status:</strong> ${cap(q.status)}</div>
-		`;
-
+	  renderQuestCard(found.quest);
 	  highlightSelectedListItem();
 	}
 
@@ -1756,7 +2012,7 @@
 
 		const [item] = fromSorted.splice(idx, 1);
 		item.status = newStatus;
-		toSorted.push(item); // drop to end of new status
+		toSorted.push(item);
 
 		// Build bulk updates for both lists
 		const updates = [];
@@ -1881,7 +2137,6 @@
 	  const { data: urlData } = supabase.storage.from('npc-images').getPublicUrl(path);
 	  const imageUrl = urlData?.publicUrl || '';
 
-	  // ✅ this was missing
 	  if (window.currentEditingNPC) {
 		await supabase.from('npcs').update({
 		  name, country, region, image_url: imageUrl, status, race
@@ -2846,7 +3101,7 @@
 	  }
 	};
 
-	/* Persistence helpers */
+	/* Persistence Helpers */
 	let corkPreviewURL = null;
 
 	function updateCorkSelection(input) {
@@ -3266,7 +3521,7 @@
 	  });
 	}
 
-	/* Fetch Maps from Supabase */
+	/* Fetch Maps From Supabase */
 	async function fetchMaps() {
 	  const { data, error } = await supabase
 		.from('maps')
@@ -3332,7 +3587,7 @@
 	  fetchMaps();
 	}
 
-	/* Modal open/close */
+	/* Modal Open/Close */
 	function openMapModal(url, name = 'Map') {
 	  const modal = document.getElementById('map-view-modal');
 	  const img   = document.getElementById('map-modal-img');
