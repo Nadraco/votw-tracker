@@ -1057,9 +1057,9 @@
 	  word-wrap: break-word;
 	}
 	.q-lead {
-	  font-size: 20px;        /* bigger lead */
+	  font-size: 20px;       
 	  line-height: 1.5;
-	  margin: 4px 0 18px;     /* extra space before the badges */
+	  margin: 4px 0 18px;  
 	  color: #d9d1d4;
 	}
 
@@ -1150,7 +1150,7 @@
 	/* Meta Tiles */
 	.q-meta-grid {
 	  display: grid;
-	  grid-template-columns: repeat(2, minmax(240px, 1fr)); /* tighter + 2 columns */
+	  grid-template-columns: repeat(2, minmax(240px, 1fr));
 	  gap: 12px 14px;
 	  max-width: 760px;
 	  margin: 0 auto;
@@ -1211,12 +1211,73 @@
 	@media (max-width: 900px) {
 	  .q-meta-grid { grid-template-columns: 1fr; max-width: 520px; }
 	}
+	
+	/* Business */
+	.biz-cards {
+	  display: grid;
+	  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+	  gap: 14px;
+	}
+	.biz-card {
+	  background:#1f0f1a;
+	  border:1px solid #4d2d3e;
+	  border-radius:12px;
+	  padding:14px;
+	}
+	.biz-card h4 { margin:0 0 6px; color:gold; }
+	.biz-meta { font-size:13px; color:#cfc4c8; margin-bottom:8px; }
+	.biz-note { font-size:13px; color:#ddd; opacity:.9; }
+	.biz-actions { display:flex; gap:8px; margin-top:10px; }
+	.biz-btn { background:#3e2337; color:#fff; border:none; border-radius:6px; padding:8px 10px; cursor:pointer; }
+	.biz-btn:hover { filter:brightness(1.05); }
 
+	.biz-summary {
+	  display:grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr));
+	  gap:12px; margin-top:14px;
+	}
+	.biz-tile {
+	  background:linear-gradient(180deg,#241320,#1c0f19);
+	  border:1px solid #4d2d3e; border-radius:12px; padding:14px;
+	}
+	.biz-t-label { font-size:12px; color:#c8b5be; letter-spacing:.3px; text-transform:uppercase; }
+	.biz-t-value { font-size:18px; color:#fff; font-weight:600; margin-top:6px; }
+
+	.biz-table-wrap { overflow:auto; border:1px solid #4d2d3e; border-radius:10px; }
+	.biz-table {
+	  width:100%; border-collapse:collapse; min-width:720px;
+	}
+	.biz-table th, .biz-table td {
+	  border-bottom:1px solid #3e2337; padding:8px; text-align:left; color:#ddd; font-size:14px;
+	}
+	.biz-table th { color:gold; font-weight:600; }
+	.biz-table td.amount { font-weight:600; }
+	
+	.biz-header {
+	  display: flex;
+	  align-items: center;
+	  justify-content: space-between;
+	  gap: 12px;
+	  margin: 0 0 12px;
+	}
+	.biz-header-title {
+	  color: white;
+	  margin: 0;
+	}
+	.biz-header-right {
+	  display: flex;
+	  align-items: center;
+	  gap: 8px;
+	}
+	.biz-filter-label {
+	  color: #d2c6ca;
+	  font-size: 16px;
+	  margin-bottom: 16px
+	}
 
 </style>
-
 </head>
 <body>
+	
   <div class="topnav">
 	<button onclick="switchSection('quest-tracker', this)">	Quest Tracker</button>
     <button onclick="switchSection('npc-library', this)">NPC Library</button>
@@ -1224,11 +1285,95 @@
 	<button onclick="switchSection('maps-tab', this)">Maps</button>
 	<button onclick="switchSection('captains-quarters', this)">Captain's Quarters</button>
 	<button onclick="switchSection('business-tab', this)">Business</button>
-
   </div>
   
 	<div id="business-tab" class="content">
-		  <h3 style="color: gold; padding-left: 30px;">Coming Soon!</h3>
+	  <div class="main" id="business-main" style="padding:24px;">
+		<div class="biz-header">
+		  <h2 class="biz-header-title">Ship Businesses</h2>
+		  <div class="biz-header-right">
+			<label for="biz-asset-filter" class="biz-filter-label">Filter:</label>
+			<select id="biz-asset-filter" class="npc-input" onchange="bizRenderEarningsPreview()">
+			  <option value="">All Assets</option>
+			</select>
+		  </div>
+		</div>
+
+		<div id="business-cards" class="biz-cards"></div>
+
+		<div class="biz-summary">
+		  <div class="biz-tile">
+			<div class="biz-t-label">Total Earned (Filtered)</div>
+			<div class="biz-t-value" id="biz-total-filtered">0 gp</div>
+		  </div>
+		  <div class="biz-tile">
+			<div class="biz-t-label">All-Time Earned</div>
+			<div class="biz-t-value" id="biz-total-all">0 gp</div>
+		  </div>
+		</div>
+
+		<h3 style="color:gold; margin-top:24px;">Recent Earnings</h3>
+		<div id="biz-earnings-preview" class="biz-table-wrap"></div>
+	  </div>
+	</div>
+
+	<!-- BUSINESS MODAL -->
+	<div id="biz-log-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:1200; align-items:center; justify-content:center;">
+	  <div style="background:#2e1a32; width:min(96vw,1000px); max-height:90vh; overflow:auto; border-radius:12px; padding:16px; position:relative;">
+		<button onclick="bizCloseLogModal()" style="position:absolute; top:10px; right:12px; background:none; border:none; color:white; font-size:22px; cursor:pointer;">&times;</button>
+		<h2 style="color:gold; margin:0 0 8px;">Earnings Log</h2>
+		<div id="biz-log-body"></div>
+	  </div>
+	</div>
+
+	<!-- BUSINESS ENTRY MODAL -->
+	<div id="biz-entry-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:1200; align-items:center; justify-content:center;">
+	  <div style="background:#2e1a32; width:min(96vw,520px); border-radius:12px; padding:16px; position:relative;">
+		<button onclick="bizCloseEntryModal()" style="position:absolute; top:10px; right:12px; background:none; border:none; color:white; font-size:22px; cursor:pointer;">&times;</button>
+		<h2 style="color:gold; margin:0 0 10px;">Add Earning</h2>
+
+		<label class="npc-search label">Asset</label>
+		<select id="biz-entry-asset" class="npc-input"></select>
+
+		<div style="display:flex; gap:8px;">
+		  <div style="flex:1">
+			<label class="npc-search label">Period</label>
+			<select id="biz-entry-period" class="npc-input">
+			  <option value="week" selected>Week (5 days)</option>
+			  <option value="month">Month (3 weeks)</option>
+			</select>
+		  </div>
+		  <div style="flex:2; display:flex; gap:8px;">
+			<div style="flex:1">
+			  <label class="npc-search label">Day</label>
+			  <select id="biz-gday" class="npc-input"></select>
+			</div>
+			<div style="flex:1.4">
+			  <label class="npc-search label">Month</label>
+			  <select id="biz-gmonth" class="npc-input"></select>
+			</div>
+			<div style="flex:1.2">
+			  <label class="npc-search label">Year</label>
+			  <input id="biz-gyear" type="text" class="npc-input" placeholder="X649" />
+			</div>
+		  </div>
+		</div>
+
+		<label class="npc-search label">Amount (gp)</label>
+		<input id="biz-entry-amount" type="number" inputmode="decimal" class="npc-input" placeholder="e.g., 60" />
+	
+		<div id="biz-vat-potions" style="display:none; margin:6px 0 10px;">
+		  <label class="npc-search label" style="margin-bottom:6px;">Brewed Potions</label>
+		  <div style="display:flex; gap:8px;">
+			<select id="biz-vat-potion1" class="npc-input" style="flex:1;"></select>
+			<select id="biz-vat-potion2" class="npc-input" style="flex:1;"></select>
+		  </div>
+		</div>
+
+		<div id="biz-entry-helper" style="margin:6px 0 10px; font-size:13px; color:#cfc4c8;"></div>
+
+		<button class="gold-button" onclick="bizSaveEntry()">💾 Save</button>
+	  </div>
 	</div>
   
    <!-- QUEST TRACKER -->
@@ -1382,7 +1527,6 @@
 			  <option value="Unknown">Unknown</option>
 			</select>
 
-			<!-- Styled Image Upload -->
 			<div class="file-upload-wrapper" style="margin-bottom:14px;">
 			  <label for="edit-npc-image-upload" class="gold-button file-label" id="edit-file-label">Choose New Image</label>
 			  <input type="file" id="edit-npc-image-upload" onchange="displayEditFileName(this)" />
@@ -1403,6 +1547,7 @@
 		<!-- INVENTORY -->
 		<div id="inventory-tab" class="content">
 		  <div class="main" style="width:100%; padding:20px; display:flex; flex-direction:column; align-items:center;">
+			  
 			<!-- Search Bar -->
 			<div class="inventory-header" style="width:100%; text-align:right; margin-bottom:20px;">
 			  <input
@@ -1418,7 +1563,6 @@
 			<div id="inventory-container" style="width:100%;"></div>
 		  </div>
 		</div>
-
 
 		<!-- INVENTORY MODAL -->
 		<div id="inventory-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); justify-content:center; align-items:center; z-index:1000;">
@@ -1682,7 +1826,7 @@
 			giver: q.giver,
 			type: q.type,
 			location: q.location,
-			timeRemaining: q.time_remaining, // map to UI name
+			timeRemaining: q.time_remaining,
 			notes: q.notes,
 			reward: q.reward,
 			priority: q.priority,
@@ -1776,8 +1920,7 @@
 	let draggedQuestId = null;
 	let draggedFromStatus = null;
 	
-		async function persistQuestOrder(updates) {
-	  // de-dupe by id (last write wins)
+	async function persistQuestOrder(updates) {
 	  const byId = new Map();
 	  for (const u of updates) byId.set(String(u.id), u);
 	  const deduped = [...byId.values()];
@@ -1799,8 +1942,7 @@
 	  }
 	  return null;
 	}
-
-
+		
 	function handleDragStart(e) {
 	  const li = e.target.closest('li');
 	  draggedQuestId = li?.dataset.id || null;
@@ -1861,7 +2003,6 @@
 	  highlightSelectedListItem();
 	}
 
-
 	function handleDragEnd(e) {
 	  e.target.style.opacity = '';
 	  draggedQuestId = null;     
@@ -1894,11 +2035,9 @@
 	  });
 	}
 
-
 	function openModal(mode = 'add', quest = null) {
 	  const modal = document.getElementById('quest-modal');
 	  document.getElementById('modal-header').innerText = mode === 'edit' ? 'Edit Quest' : 'Add Quest';
-
 	  document.getElementById('modal-title-input').value = quest?.title || '';
 	  document.getElementById('modal-lead-input').value = quest?.lead || '';
 	  document.getElementById('modal-giver-input').value = quest?.giver || '';
@@ -1997,7 +2136,6 @@
 		const newStatus = tab.textContent.trim().toLowerCase();
 		if (!draggedQuestId) return;
 
-		// Same status? Just render & switch.
 		if (draggedFromStatus === newStatus) {
 		  renderQuests();
 		  switchTab(newStatus);
@@ -2014,7 +2152,6 @@
 		item.status = newStatus;
 		toSorted.push(item);
 
-		// Build bulk updates for both lists
 		const updates = [];
 		toSorted.forEach((q, i)   => updates.push({ id: q.id, status: newStatus, sort_order: i }));
 		fromSorted.forEach((q, i) => updates.push({ id: q.id,                    sort_order: i }));
@@ -2297,7 +2434,6 @@
 	  document.getElementById('npc-img-view').src = imgUrl;
 	  document.getElementById('npc-img-modal').style.display = 'flex';
 
-	  // ESC close
 	  const escClose = (ev) => {
 		if (ev.key === 'Escape') {
 		  closeNPCImgModal();
@@ -2871,7 +3007,6 @@
 	  const rarity = document.getElementById('inv-rarity').value.trim();
 	  const attunement = document.getElementById('inv-attunement').value.trim();
 	  const attuned = document.getElementById('inv-attuned').checked;
-	  const notes = document.getElementById('inv-notes').value.trim();
 
 	  if (!item) {
 		alert("Item name is required.");
@@ -3271,7 +3406,7 @@
 	  board.dataset.scale = '1';
 	}
 
-	/* Add items */
+	/* Add Items */
 	async function corkAddNote() {
 	  const text = (document.getElementById('cork-note-input').value || '').trim();
 	  if (!text) { alert('Write something first!'); return; }
@@ -3323,7 +3458,6 @@
 	  await corkSaveLayout();
 	}
 
-	/* Render & Interactions */
 	async function renderCorkItem(item) {
 	  const board = corkBoardEl();
 	  if (!board) return;
@@ -3337,7 +3471,6 @@
 	  wrapper.style.zIndex = String(item.z || 1);
 	  wrapper.dataset.itemId = item.id;
 
-	  // Toolbar
 	  const toolbar = document.createElement('div');
 	  toolbar.className = 'cork-toolbar';
 
@@ -3776,7 +3909,391 @@
 	  const modal = document.getElementById('map-view-modal');
 	  if (modal.style.display === 'flex') fitMapToViewer('contain'); 
 	});
+	
+	// BUSINESS TAB
+	const BUSINESS_TABLE = 'business_earnings'; // create via SQL below
+	const BIZ_WEEK_DAYS = 5;       // informational (matches your spec)
+	const BIZ_WEEKS_PER_MONTH = 3; // "month" = 3 weeks
+
+	// Hard Coded Assets
+	const BIZ_ASSETS = [
+	  {
+		key: 'garden',
+		name: 'Shipboard Garden',
+		formula: '1d6 × 10 gp / Month',
+		roll: () => rollDice(1,6) * 10,
+		notes: 'Increases Crew Health and Boosts Morale.',
+		period: 'month'
+	  },
+	  {
+		key: 'apiary',
+		name: 'Deck Apiary',
+		formula: '1d4 × 10 gp / Month',
+		roll: () => rollDice(1,4) * 10,
+		notes: 'Healing Honey Balm (Cure Wounds).',
+		period: 'month'
+	  },
+	  {
+		key: 'nets',
+		name: 'Fishing Net Rigs',
+		formula: '1d8 × 5 gp / Week',
+		roll: () => rollDice(1,8) * 5,
+		notes: 'Reduces Daily Rations By ~25%.',
+		period: 'week'
+	  },
+	  {
+		key: 'vats',
+		name: 'Potion Vats',
+		formula: '~1,000 gp (If Sold) / Week',
+		roll: () => 500,
+		notes: 'Produces 2 Uncommon Potions.',
+		period: 'week',
+		misc: { potions: 2, rarity: 'Uncommon' }
+	  }
+	];
+	
+	const BIZ_VAT_POTIONS = [
+	  "Philter of Love",
+	  "Potion of Greater Healing",
+	  "Potion of Growth",
+	  "Potion of Hill Giant Strength",
+	  "Potion of Poison",
+	  "Potion of Resistance",
+	];
+
+	function rollDice(n, d) {
+	  let total = 0, parts = [];
+	  for (let i=0;i<n;i++){ const r = 1 + Math.floor(Math.random()*d); total += r; parts.push(r); }
+	  return total;
+	}
+	function gp(n){ return `${Number(n||0).toLocaleString()} gp`; }
+	function isoDate(date=new Date()){ const z=new Date(date); z.setMinutes(z.getMinutes()-z.getTimezoneOffset()); return z.toISOString().slice(0,10); }
+
+	// UI Render
+	function bizRenderCards(){
+	  const host = document.getElementById('business-cards');
+	  if (!host) return;
+	  host.innerHTML = '';
+	  BIZ_ASSETS.forEach(a=>{
+		const div = document.createElement('div');
+		div.className = 'biz-card';
+		div.innerHTML = `
+		  <h4>${a.name}</h4>
+		  <div class="biz-meta">Formula: <b>${a.formula}</b></div>
+		  <div class="biz-note">Benefits: <b>${a.notes}</b></div>
+			<div class="biz-actions">
+			  <button class="biz-btn" onclick="bizOpenEntryModal('${a.key}')">➕ Add Earning</button>
+			  <button class="biz-btn" onclick="bizOpenLogModal('${a.key}')">📜 Earning Log</button>
+			</div>
+		`;
+		host.appendChild(div);
+	  });
+
+	  // Asset Filter
+	  const sel = document.getElementById('biz-asset-filter');
+	  if (sel && !sel.dataset.populated) {
+		BIZ_ASSETS.forEach(a=>{
+		  const opt = document.createElement('option');
+		  opt.value = a.key; opt.textContent = a.name;
+		  sel.appendChild(opt);
+		});
+		sel.dataset.populated = '1';
+	  }
+	}
+
+	function bizOpenEntryModal(assetKey = null){
+	  const modal  = document.getElementById('biz-entry-modal');
+	  const sel    = document.getElementById('biz-entry-asset');
+	  const amt    = document.getElementById('biz-entry-amount');
+	  const notes  = document.getElementById('biz-entry-notes');
+	  const period = document.getElementById('biz-entry-period');
+	  const gday   = document.getElementById('biz-gday');
+	  const gmonth = document.getElementById('biz-gmonth');
+	  const gyear  = document.getElementById('biz-gyear');
+
+	  const vatsWrap = document.getElementById('biz-vat-potions');
+	  const pot1 = document.getElementById('biz-vat-potion1');
+	  const pot2 = document.getElementById('biz-vat-potion2');
+
+	  if (!sel.dataset.populated){
+		sel.innerHTML = '';
+		BIZ_ASSETS.forEach(a=>{
+		  const opt=document.createElement('option');
+		  opt.value=a.key; opt.textContent=a.name;
+		  sel.appendChild(opt);
+		});
+		sel.dataset.populated='1';
+	  }
+
+	  if (!gday.dataset.populated){
+		gday.innerHTML='';
+		for(let d=1; d<=BIZ_DAYS_PER_MONTH; d++){
+		  const opt=document.createElement('option');
+		  opt.value=String(d); opt.textContent=String(d);
+		  gday.appendChild(opt);
+		}
+		gday.dataset.populated='1';
+	  }
+	  if (!gmonth.dataset.populated){
+		gmonth.innerHTML='';
+		BIZ_MONTHS.forEach((m,i)=>{
+		  const opt=document.createElement('option');
+		  opt.value=String(i); opt.textContent=m;
+		  gmonth.appendChild(opt);
+		});
+		gmonth.dataset.populated='1';
+	  }
+
+	  if (assetKey) sel.value = assetKey;
+	  amt.value = '';
+
+	  const applyAssetUI = () => {
+		const cur = BIZ_ASSETS.find(x => x.key === sel.value);
+		period.value = (cur?.period === 'month') ? 'month' : 'week';
+
+		const isVats = sel.value === 'vats';
+		vatsWrap.style.display = isVats ? '' : 'none';
+
+		if (isVats) {
+		  pot1.innerHTML = '';
+		  pot2.innerHTML = '';
+		  BIZ_VAT_POTIONS.forEach(p => {
+			const o1=document.createElement('option'); o1.value=p; o1.textContent=p; pot1.appendChild(o1);
+			const o2=document.createElement('option'); o2.value=p; o2.textContent=p; pot2.appendChild(o2);
+		  });
+		  pot1.selectedIndex = 0;
+		  pot2.selectedIndex = 1 < BIZ_VAT_POTIONS.length ? 1 : 0;
+		}
+	  };
+
+	  applyAssetUI();
+	  sel.onchange = applyAssetUI;
+
+	  // Default Fantasy Date (X649)
+	  gday.value = '1';
+	  gmonth.value = '0'; // Mossrest
+	  gyear.value = `X${BIZ_START_YEAR}`;
+
+	  modal.style.display='flex';
+	}
+
+	function bizCloseEntryModal(){
+	  document.getElementById('biz-entry-modal').style.display = 'none';
+	}
+
+	// Fantasy Calendar Settings
+	const BIZ_MONTHS = [
+	  "Mossrest","Wildmist","Silvanos","Ignishade","Scorchbreak","Amaunos",
+	  "Swiftrain","Emberwatch","Mielikos","Bleakdrift","Lastrun","Aurilos"
+	];
+	const BIZ_DAYS_PER_MONTH = 15;
+	const BIZ_START_YEAR = 649;                 // "X649"
+	const BIZ_START_REAL = new Date("2025-01-01"); 
+
+	function toGameDateParts(realDate){
+	  const d = new Date(realDate);
+	  const diffDays = Math.floor((d - BIZ_START_REAL) / (1000*60*60*24));
+	  const yearLen = BIZ_MONTHS.length * BIZ_DAYS_PER_MONTH;
+	  let dayCount = Math.max(0, diffDays);
+	  let year = BIZ_START_YEAR;
+	  while (dayCount >= yearLen){ dayCount -= yearLen; year++; }
+	  const monthIndex = Math.floor(dayCount / BIZ_DAYS_PER_MONTH);
+	  const day = (dayCount % BIZ_DAYS_PER_MONTH) + 1;
+	  return { day, monthIndex, year };
+	}
+
+	function fromGameToReal(day, monthIndex, year){
+	  const yearLen = BIZ_MONTHS.length * BIZ_DAYS_PER_MONTH;
+	  const yearsOffset  = (year - BIZ_START_YEAR) * yearLen;
+	  const monthsOffset = monthIndex * BIZ_DAYS_PER_MONTH;
+	  const daysOffset   = (day - 1);
+	  const total = yearsOffset + monthsOffset + daysOffset;
+	  const out = new Date(BIZ_START_REAL);
+	  out.setDate(out.getDate() + total);
+	  return out;
+	}
+
+	function gameDateString(day, monthIndex, year){
+	  const m = BIZ_MONTHS[monthIndex] || BIZ_MONTHS[0];
+	  return `${day} ${m} X${year}`;
+	}
+
+	function toGameDate(realDate){
+	  const parts = toGameDateParts(realDate);
+	  return gameDateString(parts.day, parts.monthIndex, parts.year);
+	}
+
+	async function bizSaveEntry(){
+	  const selEl   = document.getElementById('biz-entry-asset');
+	  const period  = document.getElementById('biz-entry-period').value;
+	  const gdayEl  = document.getElementById('biz-gday');
+	  const gmonthEl= document.getElementById('biz-gmonth');
+	  const gyearEl = document.getElementById('biz-gyear');
+	  const amountStr = document.getElementById('biz-entry-amount').value.trim();
+
+	  if (!selEl.value) return alert('Select an asset.');
+	  if (!gdayEl.value || !gmonthEl.value || !gyearEl.value) return alert('Choose a fantasy date.');
+	  if (!amountStr || isNaN(Number(amountStr))) return alert('Enter a valid amount (gp).');
+
+	  const day = Math.max(1, Math.min(BIZ_DAYS_PER_MONTH, parseInt(gdayEl.value,10)));
+	  const monthIndex = parseInt(gmonthEl.value,10);
+	  const year = parseInt(String(gyearEl.value).trim().replace(/^X/i,''),10);
+	  if (!Number.isFinite(year)) return alert('Year must be like "X649" or "649".');
+
+	  const asset = BIZ_ASSETS.find(a=>a.key===selEl.value);
+	  const amount = Number(amountStr);
+
+	  const rowMeta = Object.assign({}, asset.misc || {});
+
+	  // If Potion Vats, Save Potion Choices
+	  if (asset.key === 'vats') {
+		const p1 = (document.getElementById('biz-vat-potion1').value || '').trim();
+		const p2 = (document.getElementById('biz-vat-potion2').value || '').trim();
+		if (!p1 || !p2) return alert('Pick two potions for Potion Vats.');
+		rowMeta.brewed_potions = [p1, p2];
+	  }
+
+	  const row = {
+		on_date: isoDate(new Date()),            
+		game_date: gameDateString(day, monthIndex, year),
+		period,
+		batch: null,
+		asset_key: asset.key,
+		asset_name: asset.name,
+		amount_gp: amount,
+		meta: JSON.stringify(rowMeta)
+	  };
+
+	  const { error } = await supabase.from(BUSINESS_TABLE).insert([row]);
+	  if (error) {
+		console.error(error);
+		return alert('Failed to save entry.');
+	  }
+	  bizCloseEntryModal();
+	  bizRenderEarningsPreview();
+	}
+
+	// Preview Modal
+	async function bizFetchEarnings(){
+	  const { data, error } = await supabase
+		.from(BUSINESS_TABLE)
+		.select('*')
+		.order('on_date', { ascending:false })
+		.order('id', { ascending:false });
+	  if (error) { console.error(error); return []; }
+	  return data || [];
+	}
+	
+	function bizFilterRows(rows){
+	  const sel = document.getElementById('biz-asset-filter')?.value || '';
+	  return rows.filter(r => !sel || r.asset_key === sel);
+	}
+	
+	function bizRenderTable(rows, targetEl){
+	  const el = typeof targetEl==='string' ? document.getElementById(targetEl) : targetEl;
+	  if (!el) return;
+
+	  if (!rows.length){
+		el.innerHTML = `<div style="opacity:.8; padding:12px;">No entries yet.</div>`;
+		return;
+	  }
+
+	  const total = rows.reduce((s,r)=>s+(r.amount_gp||0),0);
+
+	  const head = `
+		<table class="biz-table">
+		  <thead>
+			<tr>
+			  <th>Date</th>
+			  <th>Asset</th>
+			  <th>Period</th>
+			  <th>Brewed</th>
+			  <th>Amount</th>
+			</tr>
+		  </thead>
+		  <tbody>
+	  `;
+
+	  const body = rows.map(r=>{
+		let brewed = '';
+		try {
+		  const m = typeof r.meta === 'string' ? JSON.parse(r.meta) : (r.meta || {});
+		  if (Array.isArray(m.brewed_potions) && m.brewed_potions.length) {
+			brewed = m.brewed_potions.join(', ');
+		  }
+		} catch(_){}
+
+		return `
+		  <tr>
+			<td>
+			  <div>${r.on_date}</div>
+			  <div style="font-size:12px; opacity:0.8;">${r.game_date || ''}</div>
+			</td>
+			<td>${r.asset_name||r.asset_key}</td>
+			<td>${r.period ? r.period.charAt(0).toUpperCase() + r.period.slice(1) : ''}</td>
+			<td>${brewed}</td>
+			<td class="amount">${gp(r.amount_gp||0)}</td>
+		  </tr>
+		`;
+	  }).join('');
+
+	  const foot = `
+		  </tbody>
+		</table>
+	  `;
+
+	  el.innerHTML = `<div class="biz-table-wrap">${head}${body}${foot}</div>`;
+
+	}
+
+	async function bizRefreshSummaries(){
+	  const all = await bizFetchEarnings();
+	  const allTotal = all.reduce((s,r)=>s+(r.amount_gp||0),0);
+	  const filtered = bizFilterRows(all);
+	  const filtTotal = filtered.reduce((s,r)=>s+(r.amount_gp||0),0);
+	  const tAll = document.getElementById('biz-total-all');
+	  const tFil = document.getElementById('biz-total-filtered');
+	  if (tAll) tAll.textContent = gp(allTotal);
+	  if (tFil) tFil.textContent = gp(filtTotal);
+	}
+
+	async function bizRenderEarningsPreview(){
+	  const rows = await bizFetchEarnings();
+	  const filtered = bizFilterRows(rows).slice(0, 20); 
+	  bizRenderTable(filtered, 'biz-earnings-preview');
+	  bizRefreshSummaries();
+	}
+
+	async function bizOpenLogModal(assetKey=null){
+	  if (assetKey){
+		const sel = document.getElementById('biz-asset-filter');
+		if (sel) { sel.value = assetKey; }
+	  }
+	  const modal = document.getElementById('biz-log-modal');
+	  const body = document.getElementById('biz-log-body');
+	  modal.style.display = 'flex';
+	  const rows = await bizFetchEarnings();
+	  const filtered = bizFilterRows(rows);
+	  bizRenderTable(filtered, body);
+	}
+	function bizCloseLogModal(){
+	  document.getElementById('biz-log-modal').style.display = 'none';
+	}
+
+	const __origSwitchSection_biz = switchSection;
+	switchSection = function(sectionId, button){
+	  __origSwitchSection_biz(sectionId, button);
+	  if (sectionId === 'business-tab'){
+		bizRenderCards();
+		bizRenderEarningsPreview();
+	  }
+	};
+
+	if (document.getElementById('business-tab')?.classList.contains('active')){
+	  bizRenderCards();
+	  bizRenderEarningsPreview();
+	}
   
-	</script>
+</script>
 </body>
 </html>
