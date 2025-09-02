@@ -1273,6 +1273,7 @@
 	  font-size: 16px;
 	  margin-bottom: 16px
 	}
+	
 
 </style>
 </head>
@@ -4193,12 +4194,13 @@
 	  const el = typeof targetEl==='string' ? document.getElementById(targetEl) : targetEl;
 	  if (!el) return;
 
+	  const currentFilter = document.getElementById('biz-asset-filter')?.value || '';
+	  const showBrewed = !currentFilter || currentFilter === 'vats';
+
 	  if (!rows.length){
 		el.innerHTML = `<div style="opacity:.8; padding:12px;">No entries yet.</div>`;
 		return;
 	  }
-
-	  const total = rows.reduce((s,r)=>s+(r.amount_gp||0),0);
 
 	  const head = `
 		<table class="biz-table">
@@ -4207,21 +4209,21 @@
 			  <th>Date</th>
 			  <th>Asset</th>
 			  <th>Period</th>
-			  <th>Brewed</th>
+			  ${showBrewed ? '<th>Brewed</th>' : ''}
 			  <th>Amount</th>
 			</tr>
 		  </thead>
 		  <tbody>
 	  `;
 
-	  const body = rows.map(r=>{
+	  const body = rows.map(r => {
 		let brewed = '';
 		try {
 		  const m = typeof r.meta === 'string' ? JSON.parse(r.meta) : (r.meta || {});
 		  if (Array.isArray(m.brewed_potions) && m.brewed_potions.length) {
 			brewed = m.brewed_potions.join(', ');
 		  }
-		} catch(_){}
+		} catch(_) {}
 
 		return `
 		  <tr>
@@ -4229,10 +4231,10 @@
 			  <div>${r.on_date}</div>
 			  <div style="font-size:12px; opacity:0.8;">${r.game_date || ''}</div>
 			</td>
-			<td>${r.asset_name||r.asset_key}</td>
+			<td>${r.asset_name || r.asset_key}</td>
 			<td>${r.period ? r.period.charAt(0).toUpperCase() + r.period.slice(1) : ''}</td>
-			<td>${brewed}</td>
-			<td class="amount">${gp(r.amount_gp||0)}</td>
+			${showBrewed ? `<td>${brewed}</td>` : ''}
+			<td class="amount">${gp(r.amount_gp || 0)}</td>
 		  </tr>
 		`;
 	  }).join('');
@@ -4243,7 +4245,6 @@
 	  `;
 
 	  el.innerHTML = `<div class="biz-table-wrap">${head}${body}${foot}</div>`;
-
 	}
 
 	async function bizRefreshSummaries(){
