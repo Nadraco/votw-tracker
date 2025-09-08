@@ -530,6 +530,12 @@
 	  font-weight: bold;
 	}
 	
+	.npc-attitude {
+		font-size: 16px;
+		color: #ccc;
+		margin-top: 4px;  
+	}
+
 	.inventory-header {
 	  justify-content: space-between;
 	  align-items: right;
@@ -830,7 +836,7 @@
 	  inset: 0;  
 	}
 	
-		.cork-file-info {
+	.cork-file-info {
 	  font-size: 12px;
 	  color: #ccc;
 	  margin-top: 6px;
@@ -980,7 +986,7 @@
 	
 	/* NPC Name */
 	.npc-name {
-	  font-size: 18px;   
+	  font-size: 20px;
 	  font-weight: bold;
 	  color: gold;      
 	  margin-bottom: 4px;
@@ -988,7 +994,8 @@
 
 	/* Race and Status Labels */
 	.npc-race,
-	.npc-status {
+	.npc-status,
+	.npc-attitude {
 	  font-size: 16px;  
 	  color: White;
 	}
@@ -1064,29 +1071,6 @@
 	}
 
 	.q-badges { display: flex; flex-wrap: wrap; gap: 8px; }
-		
-	.pill {
-	  display: inline-flex;
-	  align-items: center;
-	  gap: 6px;
-	  padding: 6px 10px;
-	  border-radius: 999px;
-	  font-size: 12px;
-	  letter-spacing: .2px;
-	  border: 1px solid #5c3b4e;
-	  background: #2b162a;
-	  color: #eee;
-	  white-space: nowrap;
-	}
-	.pill.tonal { background: #3e2337; }
-	.pill.soft { background: #2a1a27; border-color: #4d2d3e; }
-	.pill.priority-high { background: #4b1f29; border-color: #a63a4f; color: #ffd4da; }
-	.pill.priority-medium { background: #48301f; border-color: #b06d2f; color: #ffe6c9; }
-	.pill.priority-low { background: #3e3a1b; border-color: #9b9232; color: #fff7b0; }
-	.pill.status-active { background: #1e3a2f; border-color: #2e7a5b; color: #c8ffe6; }
-	.pill.status-completed { background: #263a1e; border-color: #5a8a2e; color: #e4ffd0; }
-	.pill.status-failed { background: #3a1e1e; border-color: #8a2e2e; color: #ffd0d0; }
-
 	.q-actions { display: flex; gap: 8px; flex-shrink: 0; }
 	.q-actions .icon-button { padding: 8px 10px; border-radius: 8px; }
 
@@ -1274,6 +1258,82 @@
 	  margin-bottom: 16px
 	}
 	
+	/* Attitude Colours */
+	:root{
+	  --att-ally:#22c55e;       
+	  --att-friendly:#a3e635;   
+	  --att-indifferent:#aaa; 
+	  --att-dislike:#f59e0b;   
+	  --att-hostile:#ef4444;   
+	}
+
+	.attitude-value.ally        { color: var(--att-ally);        font-weight: bold; }
+	.attitude-value.friendly    { color: var(--att-friendly);    font-weight: bold; }
+	.attitude-value.indifferent { color: var(--att-indifferent); font-weight: bold; }
+	.attitude-value.dislike     { color: var(--att-dislike);     font-weight: bold; }
+	.attitude-value.hostile     { color: var(--att-hostile);     font-weight: bold; }
+
+
+	/* NPC Pill Badges */
+	.pill-row {
+	  display: flex;
+	  flex-wrap: wrap;
+	  gap: 6px;
+	  justify-content: center;
+	  margin-top: 6px;
+	}
+
+	.pill {
+	  display: inline-flex;
+	  align-items: center;
+	  padding: 2px 10px;
+	  border-radius: 999px;
+	  font-size: 16px;
+	  line-height: 1.2;
+	  background: #3e2337;
+	  color: #fff;
+	  border: 1px solid #5c3b4e;
+	  white-space: nowrap;
+	}
+
+	/* Status Pills */
+	.pill.status-alive   { border-color: #22c55e; color: #22c55e; }
+	.pill.status-dead    { border-color: #ef4444; color: #ef4444; }
+	.pill.status-unknown { border-color: #aaa;    color: #aaa; }
+
+	/* Attitude pills */
+	.pill.attitude-ally        { border-color: var(--att-ally);        color: var(--att-ally); }
+	.pill.attitude-friendly    { border-color: var(--att-friendly);    color: var(--att-friendly); }
+	.pill.attitude-indifferent { border-color: var(--att-indifferent); color: var(--att-indifferent); }
+	.pill.attitude-dislike     { border-color: var(--att-dislike);     color: var(--att-dislike); }
+	.pill.attitude-hostile     { border-color: var(--att-hostile);     color: var(--att-hostile); }
+
+	.pill { background: #241320; }
+
+	.npc-race, .npc-status, .npc-attitude { display: none; }
+	
+	.quest-pill {
+	  display: inline-block;
+	  padding: 6px 10px;
+	  border-radius: 999px;
+	  font-size: 14px;
+	  letter-spacing: .2px;
+	  border: 1px solid #5c3b4e;
+	  background: #2b162a;
+	  color: #eee;
+	  white-space: nowrap;
+	}
+	.quest-pill.tonal { background: #3e2337; }
+	.quest-pill.soft { background: #2a1a27; border-color: #4d2d3e; }
+
+	.quest-pill.priority-high   { background: #4b1f29; border-color: #a63a4f; color: #ffd4da; }
+	.quest-pill.priority-medium { background: #48301f; border-color: #b06d2f; color: #ffe6c9; }
+	.quest-pill.priority-low    { background: #3e3a1b; border-color: #9b9232; color: #fff7b0; }
+
+	.quest-pill.status-active    { background: #1e3a2f; border-color: #2e7a5b; color: #c8ffe6; }
+	.quest-pill.status-completed { background: #263a1e; border-color: #5a8a2e; color: #e4ffd0; }
+	.quest-pill.status-failed    { background: #3a1e1e; border-color: #8a2e2e; color: #ffd0d0; }
+
 
 </style>
 </head>
@@ -1464,6 +1524,17 @@
 			<option value="dead">Dead</option>
 			<option value="unknown">Unknown</option>
 		  </select>
+		  
+			<!-- Attitude Filter -->
+			<label for="npc-attitude-filter" style="margin-bottom: 6px; font-size: 14px;">Filter by Attitude</label>
+			<select id="npc-attitude-filter" onchange="renderNPCs()" style="margin-bottom: 12px;">
+			  <option value="">All</option>
+			  <option value="Ally">Ally</option>
+			  <option value="Friendly">Friendly</option>
+			  <option value="Indifferent">Indifferent</option>
+			  <option value="Dislike">Dislike</option>
+			  <option value="Hostile">Hostile</option>
+			</select>
 
 		  <h3 style="color: gold; margin-bottom: 10px;">NPC Upload</h3>
 		  <!-- NPC Name -->
@@ -1526,6 +1597,14 @@
 			  <option value="Alive">Alive</option>
 			  <option value="Dead">Dead</option>
 			  <option value="Unknown">Unknown</option>
+			</select>
+			
+			<select id="edit-npc-attitude" style="margin-bottom:10px;">
+			  <option value="Ally">Ally</option>
+			  <option value="Friendly">Friendly</option>
+			  <option value="Indifferent">Indifferent</option>
+			  <option value="Dislike">Dislike</option>
+			  <option value="Hostile">Hostile</option>
 			</select>
 
 			<div class="file-upload-wrapper" style="margin-bottom:14px;">
@@ -1714,19 +1793,20 @@
 
 	const isBlank = v => v == null || String(v).trim() === '' || String(v).trim() === '-';
 
-	function pill(label, cls='') { return `<span class="pill ${cls}">${esc(label)}</span>`; }
-	
+	function pill(label, cls='') {
+	  return `<span class="quest-pill ${cls}">${esc(label)}</span>`;
+	}
 	function priorityPill(p) {
 	  const key = (p||'').toLowerCase();
 	  if (!key) return '';
 	  return pill(`Priority: ${cap(key)}`, `priority-${key}`);
 	}
-	
 	function statusPill(s) {
 	  const key = (s||'').toLowerCase();
 	  if (!key) return '';
 	  return pill(`Status: ${cap(key)}`, `status-${key}`);
 	}
+
 
 	function meta(label, value) {
 	  if (isBlank(value)) return '';
@@ -2186,8 +2266,7 @@
 	async function fetchNPCs() {
 	  const { data, error } = await supabase
 		.from('npcs')
-		.select('id, name, country, region, image_url, race, status');
-
+		.select('id, name, country, region, image_url, race, status, attitude');
 	  if (error) {
 		console.error("Failed to load NPCs:", error);
 		return;
@@ -2257,6 +2336,8 @@
 	  const raceRaw = document.getElementById('npc-race-input').value || '';
 	  const race    = raceRaw.trim() !== '' ? raceRaw.trim() : '-';
 	  const status  = document.getElementById('npc-status-select').value.trim();
+	  const attitude = document.getElementById('npc-attitude-upload')?.value?.trim() || 'Indifferent';
+
 
 	  if (!file || !country || !region || !name) {
 		alert("Please complete all fields.");
@@ -2277,14 +2358,14 @@
 
 	  if (window.currentEditingNPC) {
 		await supabase.from('npcs').update({
-		  name, country, region, image_url: imageUrl, status, race
+		  name, country, region, image_url: imageUrl, status, race, attitude
 		}).eq('id', window.currentEditingNPC);
 
 		window.currentEditingNPC = null;
 		alert("NPC updated!");
 	  } else {
 		await supabase.from('npcs').insert([{
-		  name, country, region, image_url: imageUrl, race, status
+		  name, country, region, image_url: imageUrl, race, status, attitude
 		}]);
 		alert("NPC added!");
 		await fetchNPCs();
@@ -2315,6 +2396,8 @@
 		  document.getElementById('edit-npc-race').value = (npc.race && npc.race !== '-') ? npc.race : '';
 		  document.getElementById('edit-npc-race').placeholder = 'Race';
 		  document.getElementById('edit-npc-status').value = npc.status || 'Unknown';
+		  const attSel = document.getElementById('edit-npc-attitude');
+		  if (attSel) attSel.value = npc.attitude || 'Indifferent';
 		  document.getElementById('npc-edit-modal').style.display = 'flex';
 		}
 
@@ -2344,6 +2427,7 @@
 		  const race    = raceRaw.trim() !== '' ? raceRaw.trim() : '-';
 
 		  const status = document.getElementById('edit-npc-status').value;
+		  const attitude = document.getElementById('edit-npc-attitude')?.value || 'Indifferent';
 		  const file   = document.getElementById('edit-npc-image-upload').files[0];
 
 		  if (!id || !name || !country || !region) {
@@ -2360,9 +2444,7 @@
 			image_url = data.publicUrl;
 		  }
 
-		  const { error } = await supabase.from('npcs').update({
-			name, country, region, status, race, image_url
-		  }).eq('id', id);
+ 		  const { error } = await supabase.from('npcs').update({ name, country, region, status, race, image_url, attitude }).eq('id', id);
 
 		  if (error) { alert("Failed to update NPC."); return; }
 
@@ -2451,6 +2533,7 @@
 
 	function renderNPCs() {
 	  const statusFilter = document.getElementById('npc-status-filter').value.toLowerCase();
+	  const attitudeFilter = (document.getElementById('npc-attitude-filter')?.value || '').toLowerCase();
 
 	  const filtered = npcs.filter(n => {
 		const matchesText   = !searchQuery || n.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -2458,7 +2541,8 @@
 		const matchesCountry = (activeCountry && activeCountry !== ALL_COUNTRY)
 		  ? n.country === activeCountry
 		  : true;
-		return matchesText && matchesStatus && matchesCountry;
+		const matchesAttitude = !attitudeFilter || (n.attitude || 'Indifferent').toLowerCase() === attitudeFilter;
+		return matchesText && matchesStatus && matchesCountry && matchesAttitude; 
 	  });
 
 	  npcContainer.innerHTML = '';
@@ -2544,16 +2628,39 @@
 
 			card.appendChild(imageWrap);
 			card.appendChild(name);
-				const raceDiv = document.createElement('div');
-				raceDiv.classList.add('npc-race');
-				const raceValue = document.createElement('span');
-				raceValue.style.fontWeight = 'bold';
-				raceValue.textContent = npc.race && npc.race.trim() !== '' ? npc.race : '-';
-				raceDiv.innerHTML = 'Race: ';
-				raceDiv.appendChild(raceValue);
-				card.appendChild(raceDiv);
-			card.appendChild(status);
+				
+			// Set attitude on card for left-accent color you already defined
+			card.setAttribute('data-attitude', (npc.attitude || 'indifferent').toLowerCase());
 
+			// Build a single pill row: Race • Status • Attitude
+			const pills = document.createElement('div');
+			pills.classList.add('pill-row');
+
+			// Race pill (skip if empty or "-")
+			const raceText = (npc.race || '').trim();
+			if (raceText && raceText !== '-') {
+			  const racePill = document.createElement('span');
+			  racePill.className = 'pill';
+			  racePill.textContent = raceText;
+			  pills.appendChild(racePill);
+			}
+
+			// Status pill
+			const statusKey = (npc.status || 'Unknown').toLowerCase(); // alive | dead | unknown
+			const statusPill = document.createElement('span');
+			statusPill.className = `pill status-${statusKey}`;
+			statusPill.textContent = (npc.status || 'Unknown');
+			pills.appendChild(statusPill);
+
+			// Attitude pill
+			const attitudeKey = (npc.attitude || 'Indifferent').toLowerCase(); // ally | friendly | indifferent | dislike | hostile
+			const attitudePill = document.createElement('span');
+			attitudePill.className = `pill attitude-${attitudeKey}`;
+			attitudePill.textContent = (npc.attitude || 'Indifferent');
+			pills.appendChild(attitudePill);
+
+			card.appendChild(pills);
+	
 			tileContainer.appendChild(card);
 		  });
 
