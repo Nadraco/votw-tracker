@@ -2992,6 +2992,7 @@
 	  document.getElementById('inv-attunement').value = '';
 	  document.getElementById('inv-attuned').checked = false;
 	  document.getElementById('inv-notes').value = '';
+	  document.getElementById('inventory-modal').dataset.editingItemId = '';
 	  document.getElementById('inventory-modal').style.display = 'flex';
 	}
 
@@ -3001,42 +3002,53 @@
 
 	async function submitInventoryItem() {
 	  const item = document.getElementById('inv-item').value.trim();
-	  const qty = parseInt(document.getElementById('inv-qty').value) || 1;
-	  const weight = parseFloat(document.getElementById('inv-weight').value) || null;
-	  const value = parseFloat(document.getElementById('inv-value').value) || null;
+	  const qty = parseInt(document.getElementById('inv-qty').value, 10) || 1;
+	  const weight = document.getElementById('inv-weight').value.trim();
+	  const value  = document.getElementById('inv-value').value.trim();
 	  const type = document.getElementById('inv-type').value.trim();
 	  const rarity = document.getElementById('inv-rarity').value.trim();
 	  const attunement = document.getElementById('inv-attunement').value.trim();
 	  const attuned = document.getElementById('inv-attuned').checked;
+	  const notes = document.getElementById('inv-notes').value.trim(); // <-- FIX
 
 	  if (!item) {
 		alert("Item name is required.");
 		return;
 	  }
 
+	  const weightNum = weight === '' ? null : parseFloat(weight);
+	  const valueNum  = value  === '' ? null : parseFloat(value);
+
 	  const editingItemId = document.getElementById('inventory-modal').dataset.editingItemId;
 	  let error;
 
 	  if (editingItemId) {
-		// Update Existing Item
 		({ error } = await supabase.from('inventory')
-		  .update({ player: currentInventoryPlayer, item, qty, weight, value, type, rarity, attunement, attuned, notes })
+		  .update({
+			player: currentInventoryPlayer,
+			item, qty,
+			weight: weightNum, value: valueNum,
+			type, rarity, attunement, attuned, notes
+		  })
 		  .eq('id', editingItemId));
 		document.getElementById('inventory-modal').dataset.editingItemId = '';
 	  } else {
-		// Add New Item
 		({ error } = await supabase.from('inventory').insert([{
-		  player: currentInventoryPlayer, item, qty, weight, value, type, rarity, attunement, attuned, notes
+		  player: currentInventoryPlayer,
+		  item, qty,
+		  weight: weightNum, value: valueNum,
+		  type, rarity, attunement, attuned, notes
 		}]));
 	  }
 
 	  if (error) {
 		console.error("Insert/update failed:", error);
 		alert("Failed to save item.");
-	  } else {
-		closeInventoryModal();
-		fetchAndRenderInventory();
+		return;
 	  }
+
+	  closeInventoryModal();
+	  fetchAndRenderInventory();
 	}
 	
 	async function deleteInventoryItem(id) {
@@ -4194,6 +4206,7 @@
 	  const el = typeof targetEl==='string' ? document.getElementById(targetEl) : targetEl;
 	  if (!el) return;
 
+	  // Check current filter. Only show "Brewed" when filtering All or Potion Vats.
 	  const currentFilter = document.getElementById('biz-asset-filter')?.value || '';
 	  const showBrewed = !currentFilter || currentFilter === 'vats';
 
